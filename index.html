@@ -290,17 +290,258 @@ main { display: grid; grid-template-columns: 180px 1fr 380px; align-items: start
 const LAST_UPDATED = "2026-03-30 12:00 UTC";
 /* ACTIONS_START */
 const ACTIONS = [
-  { id:1, date:"Mar 24, 2026", ts:20260324, title:"Venezuela-related General License issued for PdVSA transactions", desc:"OFAC issued a new Venezuela-related General License authorizing certain transactions involving PdVSA and entities owned 50%+ by PdVSA, including sale of Venezuelan oil. New FAQs 1245 and 1246 released for guidance.", types:["license"], programs:["venezuela"], implications:["Energy clients with Venezuelan operations should review new authorization scope","FAQs 1245-1246 clarify permissible vs. prohibited PdVSA transactions","Secondary sanctions risk on non-U.S. persons dealing in Venezuelan oil remains","Review counterparty ownership structures for 50% rule compliance"], url:"https://ofac.treasury.gov/recent-actions" },
-  { id:2, date:"Mar 20, 2026", ts:20260320, title:"Iran GL U: temporary authorization for Iranian-origin oil on vessels", desc:"OFAC temporarily authorized sale of oil and petroleum products of Iranian origin loaded on any vessel as of March 20, 2026. Authorization runs through April 19, 2026. Part of a broader strategy to stabilize global energy markets amid the Strait of Hormuz crisis.", types:["license"], programs:["iran"], implications:["Window closes April 19 — clients holding or transporting affected cargo must act quickly","GL does not authorize new purchases of Iranian-origin oil","Maritime clients should document vessel loading dates carefully","~140-161M barrels of Iranian oil currently at sea covered by this waiver"], url:"https://ofac.treasury.gov/recent-actions" },
-  { id:3, date:"Mar 20, 2026", ts:20260320, title:"Hizballah network designated: 10 individuals, 6 entities; Russia & narcotics removals", desc:"OFAC designated 10 individuals and 6 entities (16 total) linked to a Hizballah financing network led by Alaa Hassan Hamieh, spanning Lebanon, Syria, Poland, Slovenia, Qatar, and Canada. Simultaneously removed Mexico-based narcotics traffickers and select Russia-related designees.", types:["designation","removal"], programs:["ct","russia"], designees:16, removees:8, implications:["Financial institutions should screen for Hamieh network across all listed jurisdictions","Russia removals may affect previously blocked accounts or pending licenses","Poland and Slovenia nexus unusual — EU compliance programs should update screening"], url:"https://ofac.treasury.gov/recent-actions/20260320" },
-  { id:4, date:"Mar 19, 2026", ts:20260319, title:"Russia GL 134A: amended crude oil vessel delivery window", desc:"GL 134A authorizes delivery and sale of crude oil and petroleum products of Russian Federation origin loaded on vessels as of March 12, 2026. Supersedes GL 134.", types:["license"], programs:["russia"], implications:["Supersedes GL 134 — clients must confirm GL 134A covers their transactions","Loading date of March 12 is the key cutoff — document vessel manifests","Energy traders holding Russian-origin cargo should confirm delivery deadlines"], url:"https://ofac.treasury.gov/recent-actions" },
-  { id:5, date:"Mar 19, 2026", ts:20260319, title:"Venezuela General License 5V amended", desc:"Amended Venezuela-related GL 5V issued, authorizing certain transactions related to Venezuelan operations. Part of a broader package of Venezuela-related licensing updates alongside GL 52.", types:["license"], programs:["venezuela"], implications:["Read in conjunction with GL 52 for full Venezuela authorization picture","Clients should confirm whether existing specific licenses remain necessary"], url:"https://ofac.treasury.gov/recent-actions" },
-  { id:6, date:"Mar 18, 2026", ts:20260318, title:"Russia-related SDN removals: Turkey and UAE entities", desc:"OFAC removed multiple individuals and entities designated under EO 14024, including a Russian national and entities based in Turkey and the UAE. Removals issued without press release or stated rationale.", types:["removal"], programs:["russia"], implications:["Delisting confirms OFAC's willingness to remove parties following compliance remediation","Useful precedent for pending delisting petitions in Russia program"], url:"https://ofac.treasury.gov/recent-actions/sanctions-list-updates" },
-  { id:7, date:"Mar 18, 2026", ts:20260318, title:"Venezuela General License 52 issued", desc:"GL 52 authorizes certain transactions involving PdVSA and any entity owned 50%+ by PdVSA. Continued prohibition on transactions involving OFAC-blocked vessels remains in effect.", types:["license"], programs:["venezuela"], implications:["Blocked vessel carve-out is critical — clients must screen vessels against current SDN list","PdVSA 50% ownership rule applies — beneficial ownership analysis required"], url:"https://ofac.treasury.gov/recent-actions" },
-  { id:8, date:"Mar 13, 2026", ts:20260313, title:"Cyber-related and Russia-linked designees removed including Finnish companies", desc:"OFAC removed multiple individuals and Finland-based companies from the SDN List, including Nikita Kovalevskij and associated Finnish companies previously designated for FSB-linked logistics activity.", types:["removal"], programs:["cyber","russia"], implications:["Finnish nexus highlights EU/U.S. sanctions convergence issues","Technology sector clients should re-screen previously restricted counterparties"], url:"https://ofac.treasury.gov/recent-actions/sanctions-list-updates" },
-  { id:9, date:"Mar 12, 2026", ts:20260312, title:"DPRK IT worker fraud network: 6 individuals, 2 entities designated", desc:"OFAC sanctioned 6 individuals and 2 entities for involvement in DPRK IT worker scheme targeting U.S. businesses, generating ~$800M in 2024 for WMD programs. 21 cryptocurrency addresses designated across ETH, Tron, and Bitcoin.", types:["designation"], programs:["nk","cyber"], designees:8, implications:["Crypto exchanges must screen 21 designated ETH, Tron, and Bitcoin addresses immediately","U.S. businesses should audit remote IT contractor relationships for DPRK nexus","$800M generated in 2024 alone — enhanced due diligence required"], url:"https://home.treasury.gov/news/press-releases/sb0348" },
-  { id:10, date:"Mar 6, 2026", ts:20260306, title:"Russia GL 134: initial crude oil vessel window issued", desc:"GL 134 authorized certain transactions for sale, delivery, or offloading of Russian-origin crude oil loaded on vessels on or before March 12, 2026. Now superseded by GL 134A.", types:["license"], programs:["russia"], implications:["Now superseded by GL 134A — do not rely on this GL for ongoing compliance","Useful for documenting authorization basis for transactions executed March 6-18"], url:"https://ofac.treasury.gov/recent-actions" },
-  { id:11, date:"Feb 27, 2026", ts:20260227, title:"SDN removal and identifying information update", desc:"OFAC unblocked and removed one individual from the SDN List, and updated identifying information for a separate individual whose assets remain blocked.", types:["removal","update"], programs:[], implications:["Parties holding blocked assets of the removed individual should seek unblocking promptly","Re-screen against updated SDN entry for the modified individual"], url:"https://www.federalregister.gov/documents/2026/03/03/2026-04177/notice-of-ofac-sanctions-actions" }
+  {
+    "id": 1,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Appeal an OFAC designation or other listing",
+    "desc": "Appeal an OFAC designation or other listing",
+    "types": [
+      "designation"
+    ],
+    "programs": [],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/specially-designated-nationals-list-sdn-list/filing-a-petition-for-removal-from-an-ofac-list"
+  },
+  {
+    "id": 2,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Dealing with an &quot;OFAC Alert&quot;",
+    "desc": "Dealing with an &quot;OFAC Alert&quot;",
+    "types": [
+      "update"
+    ],
+    "programs": [],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/faqs/71"
+  },
+  {
+    "id": 3,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Issuance of Venezuela-related General License and Frequently Asked Questions",
+    "desc": "Issuance of Venezuela-related General License and Frequently Asked Questions",
+    "types": [
+      "license"
+    ],
+    "programs": [
+      "venezuela"
+    ],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260318"
+  },
+  {
+    "id": 4,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Issuance of Russia-related General License",
+    "desc": "Issuance of Russia-related General License",
+    "types": [
+      "license"
+    ],
+    "programs": [
+      "russia"
+    ],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260319_33"
+  },
+  {
+    "id": 5,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Issuance of Amended Venezuela-related General License and Frequently Asked Question",
+    "desc": "Issuance of Amended Venezuela-related General License and Frequently Asked Question",
+    "types": [
+      "license",
+      "update"
+    ],
+    "programs": [
+      "venezuela"
+    ],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260319"
+  },
+  {
+    "id": 6,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Counter Terrorism Designations; Counter Narcotics and Russia-related Designations Removals",
+    "desc": "Counter Terrorism Designations; Counter Narcotics and Russia-related Designations Removals",
+    "types": [
+      "designation",
+      "removal"
+    ],
+    "programs": [
+      "russia",
+      "ct"
+    ],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260320"
+  },
+  {
+    "id": 7,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Issuance of Iran-related General License",
+    "desc": "Issuance of Iran-related General License",
+    "types": [
+      "license"
+    ],
+    "programs": [
+      "iran"
+    ],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260320_33"
+  },
+  {
+    "id": 8,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Issuance of Venezuela-related General License",
+    "desc": "Issuance of Venezuela-related General License",
+    "types": [
+      "license"
+    ],
+    "programs": [
+      "venezuela"
+    ],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260324"
+  },
+  {
+    "id": 9,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Belarus Designations Removals; Issuance of Belarus General License; Rescission of Belarus Directive 1",
+    "desc": "Belarus Designations Removals; Issuance of Belarus General License; Rescission of Belarus Directive 1",
+    "types": [
+      "designation",
+      "removal",
+      "license"
+    ],
+    "programs": [],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260326"
+  },
+  {
+    "id": 10,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Issuance of New and Amended Venezuela-related General Licenses",
+    "desc": "Issuance of New and Amended Venezuela-related General Licenses",
+    "types": [
+      "license",
+      "update"
+    ],
+    "programs": [
+      "venezuela"
+    ],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260327_33"
+  },
+  {
+    "id": 11,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Sanctions List Updates",
+    "desc": "Sanctions List Updates",
+    "types": [
+      "update"
+    ],
+    "programs": [],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/sanctions-list-updates"
+  },
+  {
+    "id": 12,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Global Magnitsky Designations Removals; Russia-related Designations Removals",
+    "desc": "Global Magnitsky Designations Removals; Russia-related Designations Removals",
+    "types": [
+      "designation",
+      "removal"
+    ],
+    "programs": [
+      "russia"
+    ],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260327"
+  },
+  {
+    "id": 13,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "General Licenses",
+    "desc": "General Licenses",
+    "types": [
+      "license"
+    ],
+    "programs": [],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/general-licenses"
+  },
+  {
+    "id": 14,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "Issuance of Amended Russia-related General License; Publication of Amended Russia-related Frequently Asked Questions",
+    "desc": "Issuance of Amended Russia-related General License; Publication of Amended Russia-related Frequently Asked Questions",
+    "types": [
+      "license",
+      "update"
+    ],
+    "programs": [
+      "russia"
+    ],
+    "implications": [],
+    "url": "https://ofac.treasury.gov/recent-actions/20260330"
+  },
+  {
+    "id": 15,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "OFAC launches online portal for self-disclosures of sanctions violations",
+    "desc": "OFAC launches online portal for self-disclosures of sanctions violations",
+    "types": [
+      "update"
+    ],
+    "programs": [],
+    "implications": [],
+    "url": "https://bankingjournal.aba.com/2026/02/ofac-launches-online-portal-for-self-disclosures-of-sanctions-violations/"
+  },
+  {
+    "id": 16,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "OFAC lifts Russia oil sanctions for one month",
+    "desc": "OFAC lifts Russia oil sanctions for one month",
+    "types": [
+      "update"
+    ],
+    "programs": [
+      "russia"
+    ],
+    "implications": [],
+    "url": "https://bankingjournal.aba.com/2026/03/ofac-lifts-russia-oil-sanctions-for-one-month/"
+  },
+  {
+    "id": 17,
+    "date": "Mar 31, 2026",
+    "ts": 20260331,
+    "title": "OFAC temporarily eases sanctions on Iranian, Venezuelan oil",
+    "desc": "OFAC temporarily eases sanctions on Iranian, Venezuelan oil",
+    "types": [
+      "update"
+    ],
+    "programs": [
+      "iran",
+      "venezuela"
+    ],
+    "implications": [],
+    "url": "https://bankingjournal.aba.com/2026/03/ofac-temporarily-eases-sanctions-on-iranian-venezuelan-oil/"
+  }
 ];
 /* ACTIONS_END */
 
