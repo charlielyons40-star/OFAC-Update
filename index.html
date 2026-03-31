@@ -583,8 +583,10 @@ function getFiltered() {
   return items;
 }
 
+const JUNK = ["appeal an ofac","dealing with an","ofac alert","ofac faq","contact ofac","sign up","filter by","all recent actions","civil penalties"];
+
 function renderFeed() {
-  const items = getFiltered();
+  const items = getFiltered().filter(a => !JUNK.some(j => a.title.toLowerCase().includes(j)));
   const feed = document.getElementById('feed');
   document.getElementById('feedCount').textContent = items.length + ' action' + (items.length !== 1 ? 's' : '');
   if (!items.length) { feed.innerHTML = '<div class="empty-state">No actions match this filter.</div>'; return; }
