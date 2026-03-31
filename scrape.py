@@ -126,6 +126,12 @@ def scrape_federal_register():
     except json.JSONDecodeError:
         return []
 
+    JUNK_FR = [
+        "appeal an ofac", "dealing with", "ofac alert", "ofac faq",
+        "civil penalties", "reporting system", "license application",
+        "frequently asked question about", "guidance on",
+    ]
+
     actions = []
     for doc in data.get("results", []):
         title = doc.get("title", "").strip()
@@ -134,6 +140,19 @@ def scrape_federal_register():
         html_url = doc.get("html_url", "https://www.federalregister.gov")
 
         if not title or len(title) < 10:
+            continue
+
+        # Skip FAQ/guidance documents
+        if any(j in title.lower() for j in JUNK_FR):
+            continue
+
+        # Must be a real action
+        if not any(w in title.lower() for w in [
+            "designat", "remov", "license", "sanction", "issuance",
+            "rescission", "directive", "amended", "belarus", "russia",
+            "iran", "venezuela", "cuba", "korea", "cyber", "magnitsky",
+            "terror", "narcotic", "blocking"
+        ]):
             continue
 
         try:
