@@ -37,6 +37,14 @@ TYPE_KEYWORDS = {
     "update":      ["updated","update","amended","amendment","modified"],
 }
 
+JUNK = [
+    "appeal an ofac", "dealing with an", "dealing with \"ofac",
+    "ofac alert", "ofac faq", "contact ofac", "sign up", "subscribe",
+    "about ofac", "civil penalties", "reporting system", "license application",
+    "additional resources", "helpful ofac", "filter by", "all recent actions",
+    "frequently asked question about", "guidance on", "search ofac",
+]
+
 def classify(text):
     low = text.lower()
     types = [k for k, kws in TYPE_KEYWORDS.items() if any(w in low for w in kws)]
@@ -45,46 +53,45 @@ def classify(text):
         types = ["update"]
     return types, programs
 
+def is_junk(title):
+    low = title.lower()
+    return any(j in low for j in JUNK)
+
+def fetch_action_summary(url):
+    html = fetch(url)
+    if not html:
+        return ""
+    body = re.search(r'Recent Actions Body(.*?)</div>', html, re.DOTALL)
+    if not body:
+        return ""
+    text = re.sub(r'<[^>]+>', ' ', body.group(1))
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text[:400] if len(text) > 400 else text
+
 def scrape_ofac():
     print("Fetching OFAC recent actions...")
     html = fetch("https://ofac.treasury.gov/recent-actions")
     if not html:
         return []
 
-    actions = []
-    # Find action links and titles
-    pattern = re.compile(
-        r'<a href="(/recent-actions/(\d{8}[^"]*))">([^<]+)</a>\s*\n\s*\n([^\n]+)\n\s*([^\n<]+)',
-        re.MULTILINE
-    )
-    date_pattern = re.compile(r'(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})')
-
-    # Simpler extraction: find all result rows
     rows = re.findall(
         r'<a href="(/recent-actions/(\d{8}[^"]*))">([^<]{10,})</a>.*?(\w+ \d{1,2}, \d{4})',
         html, re.DOTALL
     )
 
     seen = set()
-    JUNK_PATTERNS = [
-        "appeal an ofac", "dealing with", "ofac alert", "ofac faq",
-        "contact ofac", "sign up", "subscribe", "search", "about ofac",
-        "civil penalties", "reporting system", "license application",
-        "additional resources", "helpful ofac", "filter by", "all recent"
-    ]
+    actions = []
 
     for href, slug, title, date_str in rows:
         title = title.strip()
         if title in seen or len(title) < 10:
             continue
-        # Skip navigation/FAQ links
-        if any(j in title.lower() for j in JUNK_PATTERNS):
+        if is_junk(title):
             continue
-        # Must look like a real action — contains keywords
         if not any(w in title.lower() for w in [
             "designat", "remov", "license", "sanction", "issuance",
-            "rescission", "directive", "amended", "update", "belarus",
-            "russia", "iran", "venezuela", "cuba", "korea", "cyber",
+            "rescission", "directive", "amended", "belarus", "russia",
+            "iran", "venezuela", "cuba", "korea", "cyber",
             "magnitsky", "terror", "narcotic"
         ]):
             continue
@@ -96,13 +103,17 @@ def scrape_ofac():
             dt = datetime.now(timezone.utc)
 
         types, programs = classify(title)
+        full_url = "https://ofac.treasury.gov" + href
+        desc = fetch_action_summary(full_url) or title
+        time.sleep(0.5)
+
         actions.append({
             "title": title,
-            "desc": title,
+            "desc": desc,
             "date_raw": dt,
             "types": types,
             "programs": programs,
-            "url": "https://ofac.treasury.gov" + href,
+            "url": full_url,
         })
 
     print(f"  Found {len(actions)} actions from OFAC")
@@ -126,12 +137,6 @@ def scrape_federal_register():
     except json.JSONDecodeError:
         return []
 
-    JUNK_FR = [
-        "appeal an ofac", "dealing with", "ofac alert", "ofac faq",
-        "civil penalties", "reporting system", "license application",
-        "frequently asked question about", "guidance on",
-    ]
-
     actions = []
     for doc in data.get("results", []):
         title = doc.get("title", "").strip()
@@ -141,12 +146,8 @@ def scrape_federal_register():
 
         if not title or len(title) < 10:
             continue
-
-        # Skip FAQ/guidance documents
-        if any(j in title.lower() for j in JUNK_FR):
+        if is_junk(title):
             continue
-
-        # Must be a real action
         if not any(w in title.lower() for w in [
             "designat", "remov", "license", "sanction", "issuance",
             "rescission", "directive", "amended", "belarus", "russia",
@@ -193,26 +194,6 @@ def fmt_date(dt):
 def ts_int(dt):
     return int(dt.strftime("%Y%m%d"))
 
-def build_js_actions(raw):
-    out = []
-    for i, item in enumerate(raw, 1):
-        dt = item["date_raw"]
-        title = item["title"].replace('"', '&quot;').replace("'", "&#39;")
-        desc = item["desc"].replace('"', '&quot;').replace("'", "&#39;")
-        types_js = json.dumps(item["types"])
-        programs_js = json.dumps(item["programs"])
-        url = item["url"]
-        implications = suggest_implications(item)
-        impl_js = json.dumps(implications)
-
-        out.append(
-            f'  {{ id:{i}, date:"{fmt_date(dt)}", ts:{ts_int(dt)}, '
-            f'title:"{title}", desc:"{desc}", '
-            f'types:{types_js}, programs:{programs_js}, '
-            f'implications:{impl_js}, url:"{url}" }}'
-        )
-    return "const ACTIONS = [\n" + ",\n".join(out) + "\n];"
-
 def suggest_implications(item):
     implications = []
     low = item["title"].lower() + " " + item["desc"].lower()
@@ -241,13 +222,35 @@ def suggest_implications(item):
     if "belarus" in low:
         implications.append("Directive 1 rescission significantly changes Belarus compliance landscape")
         implications.append("Review and update Belarus compliance policies immediately")
+    if "magnitsky" in low or "glomag" in low:
+        implications.append("Global Magnitsky removals may signal diplomatic shift — monitor for follow-on actions")
+        implications.append("Review related entities that may remain designated")
     if not implications:
         implications = [
             "Review full action text on OFAC.treasury.gov",
             "Assess impact on existing client transactions and counterparty relationships",
-            "Update internal compliance screening as needed"
+            "Update internal compliance screening as needed",
         ]
     return implications[:4]
+
+def build_js_actions(raw):
+    out = []
+    for i, item in enumerate(raw, 1):
+        dt = item["date_raw"]
+        title = item["title"].replace('"', '&quot;').replace("'", "&#39;")
+        desc = item["desc"].replace('"', '&quot;').replace("'", "&#39;")
+        types_js = json.dumps(item["types"])
+        programs_js = json.dumps(item["programs"])
+        url = item["url"]
+        implications = suggest_implications(item)
+        impl_js = json.dumps(implications)
+        out.append(
+            f'  {{ id:{i}, date:"{fmt_date(dt)}", ts:{ts_int(dt)}, '
+            f'title:"{title}", desc:"{desc}", '
+            f'types:{types_js}, programs:{programs_js}, '
+            f'implications:{impl_js}, url:"{url}" }}'
+        )
+    return "const ACTIONS = [\n" + ",\n".join(out) + "\n];"
 
 def get_coverage_dates(actions):
     if not actions:
@@ -258,21 +261,16 @@ def get_coverage_dates(actions):
     return start, end
 
 def scrape_news():
-    """Fetch recent geopolitical news from ABA Banking Journal OFAC roundups."""
     print("Fetching geopolitical news...")
     news = []
-
-    # ABA Banking Journal - most recent OFAC roundup
     sources = [
         "https://bankingjournal.aba.com/?s=ofac+sanctions",
         "https://www.steptoe.com/en/news-publications/international-compliance-blog.html",
     ]
-
     for url in sources:
         html = fetch(url)
         if not html:
             continue
-        # Extract article links and titles
         links = re.findall(
             r'<a[^>]+href="(https://[^"]+(?:ofac|sanction|iran|russia|venezuela|belarus|hormuz)[^"]*)"[^>]*>([^<]{20,120})</a>',
             html, re.IGNORECASE
@@ -282,21 +280,17 @@ def scrape_news():
             if len(title) < 20:
                 continue
             news.append({"url": link_url, "title": title, "source": url.split('/')[2]})
-
     return news[:8]
 
 def build_news_html(news_items):
-    """Build HTML for the news panel items."""
     if not news_items:
         return None
-
     tag_map = {
         "iran": ("iran", "Iran"), "russia": ("russia", "Russia"),
         "venezuela": ("venezuela", "Venezuela"), "hormuz": ("iran", "Energy"),
         "belarus": ("russia", "Belarus"), "korea": ("crypto", "N. Korea"),
-        "cyber": ("crypto", "Cyber"), "sanction": (None, None),
+        "cyber": ("crypto", "Cyber"),
     }
-
     items_html = []
     today = datetime.now(timezone.utc).strftime("%b %-d, %Y")
     for item in news_items:
@@ -305,8 +299,7 @@ def build_news_html(news_items):
         tags = ""
         for kw, (cls, label) in tag_map.items():
             if kw in item["title"].lower() or kw in item["url"].lower():
-                if cls and label:
-                    tags += f'<span class="news-tag {cls}">{label}</span> '
+                tags += f'<span class="news-tag {cls}">{label}</span> '
                 break
         items_html.append(
             f'<div class="news-item">\n'
@@ -317,7 +310,6 @@ def build_news_html(news_items):
         )
     return "\n".join(items_html)
 
-
 def rewrite_html(actions):
     with open("index.html", "r", encoding="utf-8") as f:
         content = f.read()
@@ -326,28 +318,22 @@ def rewrite_html(actions):
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     start_date, end_date = get_coverage_dates(actions)
 
-    # Replace ACTIONS block
     content = re.sub(
         r'/\* ACTIONS_START \*/.*?/\* ACTIONS_END \*/',
         f'/* ACTIONS_START */\n{js_actions}\n/* ACTIONS_END */',
         content, flags=re.DOTALL
     )
-
-    # Update LAST_UPDATED
     content = re.sub(
         r'const LAST_UPDATED = "[^"]*";',
         f'const LAST_UPDATED = "{updated}";',
         content
     )
-
-    # Update coverage period in header - match any existing date range
     content = re.sub(
-        r'(<div class="header-meta-val">)[^<]*–[^<]*(</div>)',
+        r'(<div class="header-meta-val">)[^<]*\u2013[^<]*(</div>)',
         f'\\g<1>{start_date} \u2013 {end_date}\\g<2>',
         content
     )
 
-    # Update news panel if we got articles
     news = scrape_news()
     news_html = build_news_html(news)
     if news_html:
@@ -366,22 +352,17 @@ def rewrite_html(actions):
 
 def main():
     all_raw = []
-
     fr = scrape_federal_register()
     all_raw.extend(fr)
     time.sleep(1)
-
     ofac = scrape_ofac()
     all_raw.extend(ofac)
     time.sleep(1)
-
     merged = merge(all_raw)
     print(f"  Total unique actions: {len(merged)}")
-
     if not merged:
         print("No actions found — keeping existing index.html")
         return
-
     rewrite_html(merged)
     print("Done.")
 
