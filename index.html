@@ -168,7 +168,7 @@ main { display: grid; grid-template-columns: 180px 1fr 380px; align-items: start
   <div class="header-right">
     <div class="header-meta">
       <div class="header-meta-label">Coverage Period</div>
-      <div class="header-meta-val">Feb 27 – Mar 24, 2026</div>
+      <div class="header-meta-val">Feb 27 – Mar 30, 2026</div>
     </div>
     <div class="header-divider"></div>
     <div class="header-meta">
@@ -615,8 +615,7 @@ function selectAction(id) {
     '<div class="detail-program-bar">' + typeTags + progTags + '</div>' +
     '<div class="detail-body">' + a.desc + '</div>' +
     '<div class="detail-section-label">Practice Implications</div>' +
-    '<ul class="detail-implications">' + a.implications.map(i => '<li>' + i + '</li>').join('') + '</ul>' +
-    '<a class="detail-link" href="' + a.url + '" target="_blank">View Source</a>';
+'<ul class="detail-implications">' + (a.implications && a.implications.length ? a.implications.map(i => '<li>' + i + '</li>').join('') : '<li>Review full action text on OFAC.treasury.gov</li><li>Assess impact on existing client transactions and counterparty relationships</li><li>Update internal compliance screening as needed</li>') + '</ul>' +    '<a class="detail-link" href="' + a.url + '" target="_blank">View Source</a>';
 }
 
 function updateTicker() {
