@@ -66,9 +66,27 @@ def scrape_ofac():
     )
 
     seen = set()
+    JUNK_PATTERNS = [
+        "appeal an ofac", "dealing with", "ofac alert", "ofac faq",
+        "contact ofac", "sign up", "subscribe", "search", "about ofac",
+        "civil penalties", "reporting system", "license application",
+        "additional resources", "helpful ofac", "filter by", "all recent"
+    ]
+
     for href, slug, title, date_str in rows:
         title = title.strip()
         if title in seen or len(title) < 10:
+            continue
+        # Skip navigation/FAQ links
+        if any(j in title.lower() for j in JUNK_PATTERNS):
+            continue
+        # Must look like a real action — contains keywords
+        if not any(w in title.lower() for w in [
+            "designat", "remov", "license", "sanction", "issuance",
+            "rescission", "directive", "amended", "update", "belarus",
+            "russia", "iran", "venezuela", "cuba", "korea", "cyber",
+            "magnitsky", "terror", "narcotic"
+        ]):
             continue
         seen.add(title)
 
@@ -220,6 +238,67 @@ def get_coverage_dates(actions):
     end = dates[-1].strftime("%b %-d, %Y")
     return start, end
 
+def scrape_news():
+    """Fetch recent geopolitical news from ABA Banking Journal OFAC roundups."""
+    print("Fetching geopolitical news...")
+    news = []
+
+    # ABA Banking Journal - most recent OFAC roundup
+    sources = [
+        "https://bankingjournal.aba.com/?s=ofac+sanctions",
+        "https://www.steptoe.com/en/news-publications/international-compliance-blog.html",
+    ]
+
+    for url in sources:
+        html = fetch(url)
+        if not html:
+            continue
+        # Extract article links and titles
+        links = re.findall(
+            r'<a[^>]+href="(https://[^"]+(?:ofac|sanction|iran|russia|venezuela|belarus|hormuz)[^"]*)"[^>]*>([^<]{20,120})</a>',
+            html, re.IGNORECASE
+        )
+        for link_url, link_title in links[:5]:
+            title = link_title.strip()
+            if len(title) < 20:
+                continue
+            news.append({"url": link_url, "title": title, "source": url.split('/')[2]})
+
+    return news[:8]
+
+def build_news_html(news_items):
+    """Build HTML for the news panel items."""
+    if not news_items:
+        return None
+
+    tag_map = {
+        "iran": ("iran", "Iran"), "russia": ("russia", "Russia"),
+        "venezuela": ("venezuela", "Venezuela"), "hormuz": ("iran", "Energy"),
+        "belarus": ("russia", "Belarus"), "korea": ("crypto", "N. Korea"),
+        "cyber": ("crypto", "Cyber"), "sanction": (None, None),
+    }
+
+    items_html = []
+    today = datetime.now(timezone.utc).strftime("%b %-d, %Y")
+    for item in news_items:
+        title = item["title"].replace('"', '&quot;')
+        source = item["source"].replace("www.", "").replace("bankingjournal.", "ABA Banking Journal")
+        tags = ""
+        for kw, (cls, label) in tag_map.items():
+            if kw in item["title"].lower() or kw in item["url"].lower():
+                if cls and label:
+                    tags += f'<span class="news-tag {cls}">{label}</span> '
+                break
+        items_html.append(
+            f'<div class="news-item">\n'
+            f'  <div class="news-source">{source} · {today}</div>\n'
+            f'  <div class="news-title"><a href="{item["url"]}" target="_blank">{title}</a></div>\n'
+            f'  {tags}\n'
+            f'</div>'
+        )
+    return "\n".join(items_html)
+
+
 def rewrite_html(actions):
     with open("index.html", "r", encoding="utf-8") as f:
         content = f.read()
@@ -242,12 +321,22 @@ def rewrite_html(actions):
         content
     )
 
-    # Update coverage period in header
+    # Update coverage period in header - match any existing date range
     content = re.sub(
-        r'<div class="header-meta-val">.*?–.*?</div>',
-        f'<div class="header-meta-val">{start_date} – {end_date}</div>',
+        r'(<div class="header-meta-val">)[^<]*–[^<]*(</div>)',
+        f'\\g<1>{start_date} \u2013 {end_date}\\g<2>',
         content
     )
+
+    # Update news panel if we got articles
+    news = scrape_news()
+    news_html = build_news_html(news)
+    if news_html:
+        content = re.sub(
+            r'(<div id="newsFeed">).*?(</div>\s*</div>\s*</div>\s*</main>)',
+            f'\\g<1>\n{news_html}\n      </div>\\g<2>',
+            content, flags=re.DOTALL
+        )
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(content)
@@ -265,6 +354,7 @@ def main():
 
     ofac = scrape_ofac()
     all_raw.extend(ofac)
+    time.sleep(1)
 
     merged = merge(all_raw)
     print(f"  Total unique actions: {len(merged)}")
