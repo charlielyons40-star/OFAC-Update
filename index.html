@@ -5,519 +5,200 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OFAC Action Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --cream: #F5F5F5;
-    --ink: #222222;
-    --ink-mid: #555555;
-    --ink-light: #999999;
-    --rule: #DEDEDE;
-    --red: #B03030;
-    --red-bg: #F8EEEE;
-    --green: #2A6040;
-    --green-bg: #EDF4F0;
-    --blue: #2A4A7A;
-    --blue-bg: #EDF1F8;
-    --amber: #6A4A10;
-    --amber-bg: #F7F2E8;
-    --purple: #4A3878;
-    --purple-bg: #F0EDF8;
-    --teal: #1A5555;
-    --teal-bg: #EAF3F3;
-    --serif: 'Libre Baskerville', Georgia, serif;
-    --sans: 'DM Sans', system-ui, sans-serif;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--cream);
-    color: var(--ink);
-    font-family: var(--sans);
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
-  /* HEADER */
-  header {
-    border-bottom: 1px solid var(--ink);
-    padding: 0 40px;
-    display: flex;
-    align-items: stretch;
-    justify-content: space-between;
-  }
-
-  .header-left {
-    padding: 20px 0;
-  }
-
-  .app-title {
-    font-family: var(--serif);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--ink);
-    letter-spacing: -0.02em;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .last-updated {
-    font-size: 11px;
-    color: var(--ink-light);
-    text-align: right;
-  }
-
-  .last-updated span {
-    display: block;
-    font-size: 12px;
-    color: var(--ink-mid);
-    font-weight: 500;
-  }
-
-  .refresh-btn {
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 500;
-    padding: 8px 18px;
-    border: 1px solid var(--ink);
-    background: transparent;
-    color: var(--ink);
-    cursor: pointer;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    transition: background 0.15s, color 0.15s;
-  }
-  .refresh-btn:hover { background: var(--ink); color: var(--cream); }
-  .refresh-btn.loading { opacity: 0.5; pointer-events: none; }
-
-  /* TICKER */
-  .ticker-bar {
-    background: var(--ink);
-    color: var(--cream);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    padding: 6px 0;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-
-  .ticker-inner {
-    display: inline-block;
-    animation: ticker 40s linear infinite;
-  }
-
-  .ticker-inner span { margin-right: 60px; }
-  .ticker-inner .dot { color: #C0392B; margin-right: 8px; }
-
-  @keyframes ticker {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  /* MAIN LAYOUT */
-  main {
-    display: grid;
-    grid-template-columns: 220px 1fr 260px;
-    gap: 0;
-    min-height: calc(100vh - 100px);
-  }
-
-  /* SIDEBAR */
-  .sidebar {
-    border-right: 1px solid var(--rule);
-    padding: 28px 24px;
-  }
-
-  .sidebar-section {
-    margin-bottom: 28px;
-  }
-
-  .sidebar-label {
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink-light);
-    margin-bottom: 10px;
-    font-weight: 500;
-  }
-
-  .filter-list { list-style: none; }
-
-  .filter-list li {
-    margin-bottom: 1px;
-  }
-
-  .filter-list button {
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    border: none;
-    font-family: var(--sans);
-    font-size: 13px;
-    color: var(--ink-mid);
-    padding: 6px 10px;
-    cursor: pointer;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: background 0.12s;
-  }
-
-  .filter-list button:hover { background: rgba(0,0,0,0.05); color: var(--ink); }
-  .filter-list button.active { background: var(--ink); color: var(--cream); }
-
-  .filter-list button .count {
-    font-size: 10px;
-    opacity: 0.6;
-    font-weight: 500;
-  }
-
-  /* FEED */
-  .feed-col {
-    padding: 28px 32px;
-    border-right: 1px solid var(--rule);
-  }
-
-  .feed-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .feed-heading {
-    font-family: var(--serif);
-    font-size: 16px;
-    font-weight: 700;
-  }
-
-  .feed-count {
-    font-size: 12px;
-    color: var(--ink-light);
-  }
-
-  .search-wrap {
-    margin-bottom: 16px;
-  }
-
-  .search-input {
-    width: 100%;
-    font-family: var(--sans);
-    font-size: 13px;
-    padding: 8px 12px;
-    border: 1px solid var(--rule);
-    background: white;
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .search-input:focus { border-color: var(--ink); }
-  .search-input::placeholder { color: var(--ink-light); }
-
-  /* ACTION CARDS */
-  .action-card {
-    border: 1px solid var(--rule);
-    background: white;
-    margin-bottom: 10px;
-    padding: 16px 18px;
-    transition: border-color 0.15s;
-    cursor: pointer;
-  }
-  .action-card:hover { border-color: var(--ink-mid); }
-  .action-card.selected { border-color: var(--ink); border-left: 3px solid var(--ink); }
-
-  .card-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 6px;
-  }
-
-  .card-title {
-    font-family: var(--serif);
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1.4;
-    color: var(--ink);
-  }
-
-  .card-date {
-    font-size: 10px;
-    color: var(--ink-light);
-    white-space: nowrap;
-    flex-shrink: 0;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-  }
-
-  .card-desc {
-    font-size: 12px;
-    color: var(--ink-mid);
-    line-height: 1.55;
-    margin-bottom: 10px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-
-  .tag {
-    font-size: 9px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 2px;
-  }
-
-  .tag.designation { background: var(--red-bg); color: var(--red); }
-  .tag.removal { background: var(--green-bg); color: var(--green); }
-  .tag.license { background: var(--blue-bg); color: var(--blue); }
-  .tag.update { background: var(--amber-bg); color: var(--amber); }
-  .tag.russia { background: var(--purple-bg); color: var(--purple); }
-  .tag.iran { background: #FDF0F7; color: #7A1A5A; }
-  .tag.venezuela { background: var(--amber-bg); color: var(--amber); }
-  .tag.cuba { background: var(--teal-bg); color: var(--teal); }
-  .tag.ct { background: var(--red-bg); color: var(--red); }
-  .tag.nk { background: #F2F2F2; color: #444; }
-  .tag.cyber { background: var(--blue-bg); color: var(--blue); }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--ink-light);
-    font-family: var(--serif);
-    font-style: italic;
-  }
-
-  /* DETAIL PANEL */
-  .detail-panel {
-    padding: 28px 24px;
-    position: sticky;
-    top: 0;
-    max-height: 100vh;
-    overflow-y: auto;
-  }
-
-  .detail-placeholder {
-    color: var(--ink-light);
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: 13px;
-    margin-top: 40px;
-    text-align: center;
-    line-height: 1.8;
-  }
-
-  .detail-content { display: none; }
-  .detail-content.visible { display: block; }
-
-  .detail-program-bar {
-    display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 16px;
-  }
-
-  .detail-date {
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-light);
-    font-weight: 500;
-    margin-bottom: 8px;
-  }
-
-  .detail-title {
-    font-family: var(--serif);
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1.4;
-    margin-bottom: 14px;
-    color: var(--ink);
-  }
-
-  .detail-body {
-    font-size: 13px;
-    line-height: 1.7;
-    color: var(--ink-mid);
-    margin-bottom: 20px;
-    border-top: 1px solid var(--rule);
-    padding-top: 14px;
-  }
-
-  .detail-section-label {
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-light);
-    font-weight: 500;
-    margin-bottom: 8px;
-    margin-top: 18px;
-  }
-
-  .detail-implications {
-    font-size: 12px;
-    line-height: 1.7;
-    color: var(--ink-mid);
-  }
-
-  .detail-implications li {
-    margin-bottom: 6px;
-    padding-left: 16px;
-    position: relative;
-  }
-  .detail-implications li::before {
-    content: '—';
-    position: absolute;
-    left: 0;
-    color: var(--ink-light);
-  }
-
-  .detail-link {
-    display: block;
-    margin-top: 20px;
-    font-size: 11px;
-    color: var(--ink);
-    text-decoration: none;
-    border: 1px solid var(--rule);
-    padding: 8px 12px;
-    text-align: center;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-weight: 500;
-    transition: background 0.15s;
-  }
-  .detail-link:hover { background: var(--ink); color: var(--cream); }
-
-  .ask-claude-btn {
-    display: block;
-    width: 100%;
-    margin-top: 10px;
-    font-family: var(--sans);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 9px 12px;
-    background: var(--ink);
-    color: var(--cream);
-    border: none;
-    cursor: pointer;
-    text-align: center;
-    transition: opacity 0.15s;
-  }
-  .ask-claude-btn:hover { opacity: 0.8; }
-
-  /* STATS ROW */
-  .stats-row {
-    display: flex;
-    border-bottom: 1px solid var(--rule);
-    border-top: 1px solid var(--rule);
-  }
-
-  .stat-box {
-    flex: 1;
-    padding: 14px 20px;
-    border-right: 1px solid var(--rule);
-    text-align: center;
-  }
-  .stat-box:last-child { border-right: none; }
-
-  .stat-num {
-    font-family: var(--serif);
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--ink);
-    line-height: 1;
-    margin-bottom: 3px;
-  }
-  .stat-label {
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--ink-light);
-  }
-
-  .stat-num.red { color: var(--red); }
-  .stat-num.green { color: var(--green); }
-  .stat-num.blue { color: var(--blue); }
-  .stat-num.amber { color: var(--amber); }
-
-  /* LOADING */
-  .loading-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(247,244,239,0.85);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--serif);
-    font-style: italic;
-    font-size: 16px;
-    color: var(--ink-mid);
-  }
-  .loading-overlay.visible { display: flex; }
-
-  @media (max-width: 900px) {
-    main { grid-template-columns: 1fr; }
-    .sidebar { border-right: none; border-bottom: 1px solid var(--rule); padding: 20px; }
-    .filter-list { display: flex; flex-wrap: wrap; gap: 6px; }
-    .filter-list li { margin-bottom: 0; }
-    .filter-list button { width: auto; padding: 5px 12px; font-size: 12px; }
-    .detail-panel { display: none; }
-    header { padding: 0 20px; }
-    .feed-col { padding: 20px; }
-    .stats-row { overflow-x: auto; }
-  }
+:root {
+  --bg: #FFFFFF;
+  --bg2: #F8F8F6;
+  --bg3: #F2F2EF;
+  --border: #E0DDD8;
+  --border2: #C8C4BE;
+  --text: #1A1A18;
+  --text2: #4A4A46;
+  --text3: #8A8A86;
+  --rule: #E0DDD8;
+  --navy: #0A1628;
+  --navy2: #162040;
+  --red: #8B1A1A;
+  --red-bg: #FBF3F3;
+  --green: #1A4A2E;
+  --green-bg: #F2F8F4;
+  --blue: #0A2A5C;
+  --blue-bg: #F0F4FA;
+  --amber: #5C3A0A;
+  --amber-bg: #FBF6EE;
+  --purple: #3A1A5C;
+  --purple-bg: #F5F0FB;
+  --teal: #0A3A3A;
+  --teal-bg: #EEF6F6;
+  --pink: #5C0A2A;
+  --pink-bg: #FBF0F4;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Source Sans 3', system-ui, sans-serif;
+  --accent: #0A2A5C;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg2); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+.top-bar { background: var(--navy); color: rgba(255,255,255,0.6); font-size: 11px; padding: 6px 32px; display: flex; align-items: center; justify-content: space-between; letter-spacing: 0.04em; }
+.top-bar a { color: rgba(255,255,255,0.6); text-decoration: none; }
+.top-bar a:hover { color: white; }
+.top-bar-right { display: flex; gap: 20px; }
+header { background: var(--bg); border-bottom: 3px solid var(--navy); padding: 0 32px; display: flex; align-items: stretch; justify-content: space-between; }
+.header-left { padding: 20px 0; }
+.header-eyebrow { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+.app-title { font-family: var(--serif); font-size: 26px; font-weight: 500; color: var(--navy); letter-spacing: -0.01em; line-height: 1.2; }
+.header-right { display: flex; align-items: center; gap: 16px; padding: 20px 0; border-left: 1px solid var(--border); padding-left: 24px; margin-left: 24px; }
+.header-meta { text-align: right; }
+.header-meta-label { font-size: 10px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+.header-meta-val { font-size: 12px; color: var(--text2); font-weight: 500; margin-top: 2px; }
+.header-divider { width: 1px; height: 32px; background: var(--border); margin: 0 4px; }
+.refresh-btn { font-family: var(--sans); font-size: 11px; font-weight: 600; padding: 8px 18px; border: 1.5px solid var(--navy); background: transparent; color: var(--navy); cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.15s; }
+.refresh-btn:hover { background: var(--navy); color: white; }
+.ticker-bar { background: var(--navy2); color: rgba(255,255,255,0.5); font-size: 10px; letter-spacing: 0.05em; padding: 6px 0; overflow: hidden; white-space: nowrap; }
+.ticker-inner { display: inline-block; animation: ticker 55s linear infinite; }
+.ticker-inner span { margin-right: 80px; }
+.ticker-inner .dot { color: #7A9CC8; margin-right: 8px; }
+@keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.stats-row { display: flex; background: var(--bg); border-bottom: 1px solid var(--border); }
+.stat-box { flex: 1; padding: 14px 24px; border-right: 1px solid var(--border); }
+.stat-box:last-child { border-right: none; }
+.stat-num { font-family: var(--serif); font-size: 28px; font-weight: 500; line-height: 1; margin-bottom: 2px; }
+.stat-label { font-size: 10px; color: var(--text3); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+.stat-num.red { color: var(--red); }
+.stat-num.green { color: var(--green); }
+.stat-num.blue { color: var(--blue); }
+.stat-num.amber { color: var(--amber); }
+.stat-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+main { display: grid; grid-template-columns: 180px 1fr 380px; align-items: start; }
+.sidebar { background: var(--bg); border-right: 1px solid var(--border); padding: 24px 0; }
+.sidebar-section { margin-bottom: 28px; }
+.sidebar-label { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); padding: 0 20px; margin-bottom: 8px; }
+.filter-list { list-style: none; }
+.filter-list button { width: 100%; text-align: left; background: transparent; border: none; font-family: var(--sans); font-size: 13px; color: var(--text2); padding: 7px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.12s; border-left: 3px solid transparent; font-weight: 400; }
+.filter-list button:hover { color: var(--navy); background: var(--bg2); }
+.filter-list button.active { color: var(--navy); background: var(--blue-bg); border-left-color: var(--navy); font-weight: 600; }
+.filter-list button .count { font-size: 10px; color: var(--text3); font-weight: 400; }
+.feed-col { padding: 24px 28px; background: var(--bg2); border-right: 1px solid var(--border); }
+.feed-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.feed-heading { font-family: var(--serif); font-size: 18px; font-weight: 500; color: var(--navy); }
+.feed-count { font-size: 11px; color: var(--text3); font-weight: 500; }
+.search-wrap { margin-bottom: 16px; }
+.search-input { width: 100%; font-family: var(--sans); font-size: 13px; padding: 9px 14px; border: 1px solid var(--border2); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
+.search-input:focus { border-color: var(--navy); }
+.search-input::placeholder { color: var(--text3); }
+.action-card { background: var(--bg); border: 1px solid var(--border); border-left: 3px solid transparent; margin-bottom: 8px; padding: 14px 16px; cursor: pointer; transition: all 0.15s; }
+.action-card:hover { border-color: var(--border2); border-left-color: var(--navy2); }
+.action-card.selected { border-color: var(--border); border-left: 3px solid var(--navy); background: var(--blue-bg); }
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 5px; }
+.card-title { font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--navy); }
+.card-date { font-size: 10px; color: var(--text3); white-space: nowrap; flex-shrink: 0; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 2px; }
+.card-desc { font-size: 12px; color: var(--text2); line-height: 1.55; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 8px; }
+.tag.designation { background: var(--red-bg); color: var(--red); border: 1px solid rgba(139,26,26,0.15); }
+.tag.removal { background: var(--green-bg); color: var(--green); border: 1px solid rgba(26,74,46,0.15); }
+.tag.license { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(10,42,92,0.15); }
+.tag.update { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(92,58,10,0.15); }
+.tag.russia { background: var(--purple-bg); color: var(--purple); border: 1px solid rgba(58,26,92,0.15); }
+.tag.iran { background: var(--pink-bg); color: var(--pink); border: 1px solid rgba(92,10,42,0.15); }
+.tag.venezuela { background: var(--amber-bg); color: var(--amber); border: 1px solid rgba(92,58,10,0.15); }
+.tag.cuba { background: var(--teal-bg); color: var(--teal); border: 1px solid rgba(10,58,58,0.15); }
+.tag.ct { background: var(--red-bg); color: var(--red); border: 1px solid rgba(139,26,26,0.15); }
+.tag.nk { background: #F4F4F2; color: #4A4A46; border: 1px solid #D8D8D4; }
+.tag.cyber { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(10,42,92,0.15); }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); font-style: italic; font-family: var(--serif); font-size: 15px; }
+.right-panel { display: flex; flex-direction: column; background: var(--bg); overflow-y: auto; height: fit-content; position: sticky; top: 0; max-height: 100vh; }
+.detail-panel { padding: 20px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg2); display: none; }
+.detail-panel.visible { display: block; }
+.panel-label { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin-bottom: 16px; }
+.detail-content { display: none; }
+.detail-content.visible { display: block; }
+.detail-date { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); font-weight: 700; margin-bottom: 6px; }
+.detail-title { font-family: var(--serif); font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 10px; color: var(--navy); }
+.detail-program-bar { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.detail-body { font-size: 12px; line-height: 1.7; color: var(--text2); margin-bottom: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+.detail-section-label { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; margin-top: 14px; }
+.detail-implications { list-style: none; }
+.detail-implications li { font-size: 12px; line-height: 1.65; color: var(--text2); margin-bottom: 6px; padding-left: 14px; position: relative; }
+.detail-implications li::before { content: '—'; position: absolute; left: 0; color: var(--text3); }
+.detail-link { display: block; margin-top: 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--navy); text-decoration: none; border: 1.5px solid var(--navy); padding: 8px 12px; text-align: center; transition: all 0.15s; }
+.detail-link:hover { background: var(--navy); color: white; }
+.news-panel { padding: 24px; flex: 1; background: var(--bg); border-top: 3px solid var(--navy); }
+.news-section-head { font-family: var(--serif); font-size: 20px; font-weight: 500; color: var(--navy); margin-bottom: 4px; }
+.news-section-sub { font-size: 11px; color: var(--text3); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
+.news-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.news-item:last-child { border-bottom: none; }
+.news-source { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+.news-title { font-size: 13px; line-height: 1.5; color: var(--navy); margin-bottom: 5px; font-weight: 500; }
+.news-title a { color: var(--navy); text-decoration: none; }
+.news-title a:hover { text-decoration: underline; color: var(--blue); }
+.news-tag { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 8px; background: var(--navy2); color: white; margin-top: 2px; margin-right: 3px; }
+.news-tag.iran { background: var(--pink); }
+.news-tag.russia { background: var(--purple); }
+.news-tag.venezuela { background: #7A5010; }
+.news-tag.energy { background: #1A4A2E; }
+.news-tag.crypto { background: #0A3A5C; }
+@media (max-width: 960px) {
+  main { grid-template-columns: 1fr; }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+  .filter-list { display: flex; flex-wrap: wrap; padding: 0 12px; gap: 4px; }
+  .filter-list li { margin: 0; }
+  .filter-list button { width: auto; border-left: none; border-bottom: 2px solid transparent; }
+  .filter-list button.active { border-left: none; border-bottom-color: var(--navy); }
+  .right-panel { position: static; max-height: none; }
+  .feed-col { border-right: none; }
+  header { padding: 0 16px; }
+}
 </style>
 </head>
 <body>
-
-<div class="loading-overlay" id="loadingOverlay">Fetching latest OFAC actions…</div>
-
+<div class="top-bar">
+  <span>U.S. Treasury Office of Foreign Assets Control — Sanctions Intelligence</span>
+  <div class="top-bar-right">
+    <a href="https://ofac.treasury.gov/recent-actions" target="_blank">OFAC Recent Actions</a>
+    <a href="https://sanctionssearch.ofac.treas.gov/" target="_blank">SDN Search</a>
+    <a href="https://ofac.treasury.gov/faqs" target="_blank">OFAC FAQs</a>
+  </div>
+</div>
 <header>
-  <div style="display:flex; align-items:stretch;">
-    <div class="header-left">
-      <div class="app-title">OFAC Action Tracker</div>
-    </div>
+  <div class="header-left">
+    <div class="header-eyebrow">Sanctions Intelligence Dashboard</div>
+    <div class="app-title">OFAC Action Tracker</div>
   </div>
   <div class="header-right">
-    <div class="last-updated">
-      Last refreshed<span id="lastUpdatedTime">—</span>
+    <div class="header-meta">
+      <div class="header-meta-label">Coverage Period</div>
+      <div class="header-meta-val">Feb 27 – Mar 24, 2026</div>
+    </div>
+    <div class="header-divider"></div>
+    <div class="header-meta">
+      <div class="header-meta-label">Last Updated</div>
+      <div class="header-meta-val" id="lastUpdatedTime">—</div>
     </div>
     <button class="refresh-btn" id="refreshBtn" onclick="fetchAndRender()">↻ Refresh</button>
   </div>
 </header>
-
-<!-- Ticker -->
 <div class="ticker-bar">
   <div class="ticker-inner" id="tickerInner">
-    <span><span class="dot">●</span>Loading latest OFAC actions…</span>
-    <span><span class="dot">●</span>Loading latest OFAC actions…</span>
+    <span><span class="dot">◆</span>Loading latest OFAC actions…</span>
+    <span><span class="dot">◆</span>Loading latest OFAC actions…</span>
   </div>
 </div>
-
-<!-- Stats -->
 <div class="stats-row">
-  <div class="stat-box"><div class="stat-num red" id="statDesig">—</div><div class="stat-label">Designations</div></div>
-  <div class="stat-box"><div class="stat-num green" id="statRemoval">—</div><div class="stat-label">Removals</div></div>
-  <div class="stat-box"><div class="stat-num blue" id="statLicense">—</div><div class="stat-label">Gen. Licenses</div></div>
-  <div class="stat-box"><div class="stat-num amber" id="statTotal">—</div><div class="stat-label">Total Actions</div></div>
+  <div class="stat-box">
+    <div class="stat-num red" id="statDesigPeople">24</div>
+    <div class="stat-label">Individuals &amp; Entities Designated</div>
+    <div class="stat-sub" id="statDesigActions"></div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num green" id="statRemovalPeople">—</div>
+    <div class="stat-label">Individuals &amp; Entities Removed</div>
+    <div class="stat-sub" id="statRemovalActions"></div>
+  </div>
+  <div class="stat-box"><div class="stat-num blue" id="statLicense">—</div><div class="stat-label">General Licenses</div></div>
+  <div class="stat-box"><div class="stat-num amber" id="statTotal">—</div><div class="stat-label">Total OFAC Actions</div></div>
 </div>
-
 <main>
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-section">
       <div class="sidebar-label">Action Type</div>
@@ -525,7 +206,7 @@
         <li><button class="active" data-filter="all">All Actions <span class="count" id="countAll"></span></button></li>
         <li><button data-filter="designation">Designations <span class="count" id="countDesig"></span></button></li>
         <li><button data-filter="removal">Removals <span class="count" id="countRemoval"></span></button></li>
-        <li><button data-filter="license">General Licenses <span class="count" id="countLicense"></span></button></li>
+        <li><button data-filter="license">Gen. Licenses <span class="count" id="countLicense"></span></button></li>
         <li><button data-filter="update">Updates <span class="count" id="countUpdate"></span></button></li>
       </ul>
     </div>
@@ -536,14 +217,12 @@
         <li><button data-filter="iran">Iran</button></li>
         <li><button data-filter="venezuela">Venezuela</button></li>
         <li><button data-filter="cuba">Cuba</button></li>
-        <li><button data-filter="ct">Counterterrorism</button></li>
-        <li><button data-filter="nk">North Korea</button></li>
+        <li><button data-filter="ct">CT / SDGT</button></li>
+        <li><button data-filter="nk">N. Korea</button></li>
         <li><button data-filter="cyber">Cyber</button></li>
       </ul>
     </div>
   </aside>
-
-  <!-- Feed -->
   <section class="feed-col">
     <div class="feed-header">
       <div class="feed-heading" id="feedHeading">All Actions</div>
@@ -554,213 +233,98 @@
     </div>
     <div id="feed"></div>
   </section>
-
-  <!-- Detail -->
-  <aside class="detail-panel">
-    <div class="sidebar-label">Action Detail</div>
-    <div class="detail-placeholder" id="detailPlaceholder">Select an action<br>to view details</div>
-    <div class="detail-content" id="detailContent"></div>
-  </aside>
+  <div class="right-panel">
+    <div class="detail-panel">
+      <div class="panel-label">Action Detail</div>
+      <div class="detail-content" id="detailContent"></div>
+    </div>
+    <div class="news-panel">
+      <div class="news-section-head">Geopolitical Intelligence</div>
+      <div class="news-section-sub">Current events shaping sanctions programs</div>
+      <div id="newsFeed">
+        <div class="news-item">
+          <div class="news-source">Wikipedia · Updated Mar 25, 2026</div>
+          <div class="news-title"><a href="https://en.wikipedia.org/wiki/2026_Strait_of_Hormuz_crisis" target="_blank">2026 Strait of Hormuz crisis: U.S.–Israel strikes on Iran trigger maritime shutdown, 21 vessel attacks, 70% tanker traffic decline</a></div>
+          <span class="news-tag iran">Iran</span> <span class="news-tag energy">Energy</span>
+        </div>
+        <div class="news-item">
+          <div class="news-source">BESA Center · Mar 22, 2026</div>
+          <div class="news-title"><a href="https://besacenter.org/why-did-the-us-just-lift-sanctions-on-iranian-oil/" target="_blank">Why did the U.S. lift sanctions on Iranian oil? 140 million barrels already at sea — a calculated move to buy time and stabilize prices</a></div>
+          <span class="news-tag iran">Iran</span>
+        </div>
+        <div class="news-item">
+          <div class="news-source">Windward Maritime AI · Mar 23, 2026</div>
+          <div class="news-title"><a href="https://windward.ai/blog/march-23-maritime-intelligence-daily/" target="_blank">Strait of Hormuz intelligence daily: 161M barrels of Iranian oil on 158 vessels under sanctions waiver; selective transit corridor emerges</a></div>
+          <span class="news-tag iran">Iran</span> <span class="news-tag energy">Energy</span>
+        </div>
+        <div class="news-item">
+          <div class="news-source">Dallas Fed · Mar 20, 2026</div>
+          <div class="news-title"><a href="https://www.dallasfed.org/research/economics/2026/0320" target="_blank">Strait of Hormuz closure: WTI projected at $98/bbl; global GDP growth reduced by 2.9 percentage points in Q2 2026</a></div>
+          <span class="news-tag energy">Energy</span>
+        </div>
+        <div class="news-item">
+          <div class="news-source">Kpler · Mar 1, 2026</div>
+          <div class="news-title"><a href="https://www.kpler.com/blog/us-iran-conflict-strait-of-hormuz-crisis-reshapes-global-oil-markets" target="_blank">Iran war reshapes oil markets: Russia's competitive position improves as India and China pivot toward Russian crude amid Gulf disruption</a></div>
+          <span class="news-tag iran">Iran</span> <span class="news-tag russia">Russia</span>
+        </div>
+        <div class="news-item">
+          <div class="news-source">Euromaidan Press · Mar 19, 2026</div>
+          <div class="news-title"><a href="https://euromaidanpress.com/2026/03/19/us-ofac-russia-sanctions-removed-march-2026/" target="_blank">Six Russia-linked entities removed from SDN list in March 2026 with no press release and no stated reason — including FSB-linked logistics network</a></div>
+          <span class="news-tag russia">Russia</span>
+        </div>
+        <div class="news-item">
+          <div class="news-source">The Hacker News · Mar 18, 2026</div>
+          <div class="news-title"><a href="https://thehackernews.com/2026/03/ofac-sanctions-dprk-it-worker-network.html" target="_blank">DPRK IT worker fraud: OFAC sanctions network using fake LinkedIn/GitHub identities to penetrate U.S. firms and fund WMD programs</a></div>
+          <span class="news-tag crypto">N. Korea</span>
+        </div>
+        <div class="news-item">
+          <div class="news-source">Corporate Compliance Insights · Mar 2026</div>
+          <div class="news-title"><a href="https://www.corporatecomplianceinsights.com/state-ofac-sanctions-enforcement-2026/" target="_blank">State of OFAC enforcement 2025–26: 1,300+ designations under Trump, focus on cartels, Iran shadow fleet, SE Asia scam networks, China</a></div>
+          <span class="news-tag energy">Compliance</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
-
 <script>
-/* LAST_UPDATED */
-const LAST_UPDATED = "2026-03-25 12:00 UTC";
+const LAST_UPDATED = "2026-03-30 12:00 UTC";
 /* ACTIONS_START */
 const ACTIONS = [
-  {
-    id: 1,
-    date: "Mar 24, 2026",
-    ts: 20260324,
-    title: "Venezuela-related General License issued for PdVSA transactions",
-    desc: "OFAC issued a new Venezuela-related General License authorizing certain transactions involving PdVSA and entities owned 50%+ by PdVSA, including sale of Venezuelan oil. New FAQs 1245 and 1246 released for guidance.",
-    types: ["license"],
-    programs: ["venezuela"],
-    implications: [
-      "Energy clients with Venezuelan operations should review new authorization scope",
-      "FAQs 1245–1246 clarify permissible vs. prohibited PdVSA transactions",
-      "Secondary sanctions risk on non-U.S. persons dealing in Venezuelan oil remains",
-      "Review counterparty ownership structures for 50% rule compliance"
-    ],
-    url: "https://ofac.treasury.gov/recent-actions"
-  },
-  {
-    id: 2,
-    date: "Mar 20, 2026",
-    ts: 20260320,
-    title: "Iran GL: temporary authorization for Iranian-origin oil on vessels",
-    desc: "OFAC temporarily authorized sale of oil and petroleum products of Iranian origin loaded on any vessel as of March 20, 2026. Authorization runs through April 19, 2026.",
-    types: ["license"],
-    programs: ["iran"],
-    implications: [
-      "Window closes April 19 — clients holding or transporting affected cargo must act quickly",
-      "GL does not authorize new purchases of Iranian-origin oil",
-      "Maritime clients should document vessel loading dates carefully",
-      "Consult OFAC FAQs for interaction with existing Iran GL framework"
-    ],
-    url: "https://ofac.treasury.gov/recent-actions"
-  },
-  {
-    id: 3,
-    date: "Mar 20, 2026",
-    ts: 20260320,
-    title: "16-person Hizballah network designated; Russia & narcotics removals",
-    desc: "OFAC designated a 16-person Hizballah financing network led by Alaa Hassan Hamieh, spanning Lebanon, Syria, Poland, Slovenia, Qatar, and Canada — estimated $100M+ diverted since 2020. Simultaneously removed Mexico-based narcotics traffickers and select Russia-related designees.",
-    types: ["designation", "removal"],
-    programs: ["ct", "russia"],
-    implications: [
-      "Financial institutions should screen for Hamieh network across all listed jurisdictions",
-      "Russia removals may affect previously blocked accounts or pending licenses",
-      "Poland and Slovenia nexus unusual — EU compliance programs should update screening",
-      "Narcotics removals affect SDNT list; relevant for clients in Mexico-linked trade finance"
-    ],
-    url: "https://ofac.treasury.gov/recent-actions/sanctions-list-updates"
-  },
-  {
-    id: 4,
-    date: "Mar 19, 2026",
-    ts: 20260319,
-    title: "Russia GL 134A: amended crude oil vessel delivery window",
-    desc: "GL 134A authorizes delivery and sale of crude oil and petroleum products of Russian Federation origin loaded on vessels as of March 12, 2026. Supersedes GL 134. Limited vessel management and crew welfare services also authorized.",
-    types: ["license"],
-    programs: ["russia"],
-    implications: [
-      "Supersedes GL 134 — clients relying on the prior license must confirm GL 134A covers their transactions",
-      "Loading date of March 12 is the key cutoff — document vessel manifests",
-      "Crew welfare carve-out provides limited operational flexibility for maritime clients",
-      "Energy traders holding Russian-origin cargo should confirm delivery deadlines under GL 134A"
-    ],
-    url: "https://ofac.treasury.gov/recent-actions"
-  },
-  {
-    id: 5,
-    date: "Mar 19, 2026",
-    ts: 20260319,
-    title: "Venezuela General License 5V amended",
-    desc: "Amended Venezuela-related GL 5V issued, authorizing certain transactions related to Venezuelan operations. Part of a broader package of Venezuela-related licensing updates alongside GL 52.",
-    types: ["license"],
-    programs: ["venezuela"],
-    implications: [
-      "Read in conjunction with GL 52 issued the same day for full Venezuela authorization picture",
-      "Clients with Venezuelan operations should confirm whether existing specific licenses remain necessary",
-      "Amendment may expand or restrict prior GL 5V scope — conduct side-by-side comparison"
-    ],
-    url: "https://ofac.treasury.gov/recent-actions"
-  },
-  {
-    id: 6,
-    date: "Mar 18, 2026",
-    ts: 20260318,
-    title: "Russia-related SDN removals: Turkey and UAE entities",
-    desc: "OFAC removed multiple individuals and entities designated under EO 14024, including a Russian national and entities based in Turkey and the UAE. Technology and business entities linked to secondary sanctions risk removed following remediation.",
-    types: ["removal"],
-    programs: ["russia"],
-    implications: [
-      "Delisting confirms OFAC's willingness to remove parties following compliance remediation",
-      "Turkey and UAE are high-risk jurisdictions for Russia secondary sanctions — monitor ongoing exposure",
-      "Clients with previously blocked transactions involving removed parties should seek unblocking",
-      "Useful precedent for pending delisting petitions in Russia program"
-    ],
-    url: "https://ofac.treasury.gov/recent-actions/sanctions-list-updates"
-  },
-  {
-    id: 7,
-    date: "Mar 18, 2026",
-    ts: 20260318,
-    title: "Venezuela General License 52 issued",
-    desc: "GL 52 authorizes certain transactions involving PdVSA and any entity owned 50%+ by PdVSA. Continued prohibition on transactions involving OFAC-blocked vessels remains in effect.",
-    types: ["license"],
-    programs: ["venezuela"],
-    implications: [
-      "Blocked vessel carve-out is critical — clients must screen vessels against current SDN list",
-      "PdVSA 50% ownership rule applies — beneficial ownership analysis required for counterparties",
-      "Coordinate with GL 5V (amended same day) for complete Venezuela compliance picture"
-    ],
-    url: "https://ofac.treasury.gov/recent-actions"
-  },
-  {
-    id: 8,
-    date: "Mar 13, 2026",
-    ts: 20260313,
-    title: "Cyber-related and Russia-linked designees removed including Finnish companies",
-    desc: "OFAC removed multiple individuals and Finland-based companies from the SDN List, including entities previously linked to cyber-related designations and Russia-related sanctions. Includes Nikita Kovalevskij and associated Finnish companies.",
-    types: ["removal"],
-    programs: ["cyber", "russia"],
-    implications: [
-      "Finnish nexus highlights EU/U.S. sanctions convergence issues for multinational clients",
-      "Removal of cyber-designated entities may free previously blocked digital assets or accounts",
-      "Technology sector clients should re-screen previously restricted counterparties",
-      "Demonstrates delisting pathway for cyber-designated parties through OFAC 50 petition process"
-    ],
-    url: "https://ofac.treasury.gov/recent-actions/sanctions-list-updates"
-  },
-  {
-    id: 9,
-    date: "Mar 16, 2026",
-    ts: 20260316,
-    title: "Russia General License 134: initial crude oil vessel window",
-    desc: "GL 134 authorized certain transactions for sale, delivery, or offloading of Russian-origin crude oil loaded on vessels on or before March 12, 2026, through April 11, 2026. Now superseded by GL 134A.",
-    types: ["license"],
-    programs: ["russia"],
-    implications: [
-      "Now superseded by GL 134A (Mar 19) — do not rely on this GL for ongoing compliance",
-      "Useful for documenting authorization basis for transactions executed March 16–18",
-      "Rapid GL amendment within 3 days signals active OFAC engagement with energy sector"
-    ],
-    url: "https://bankingjournal.aba.com/2026/03/recent-news-from-treasurys-office-of-foreign-assets-control-march-16/"
-  },
-  {
-    id: 10,
-    date: "Mar 12, 2026",
-    ts: 20260312,
-    title: "North Korea SDN designation with digital currency addresses",
-    desc: "OFAC designated DO, Phi Khanh (Vietnam) and updated SDN entry for SIM, Hyon Sop (North Korea/China), including digital currency addresses across ETH, ARB, and BSC chains. Both linked to NPWMD program and Korea Kwangson Banking Corp.",
-    types: ["designation", "update"],
-    programs: ["nk"],
-    implications: [
-      "Crypto exchanges and VASPs must screen ETH, ARB, and BSC addresses immediately",
-      "Vietnam-nexus individual underscores OFAC's focus on DPRK procurement networks in SE Asia",
-      "Korea Kwangson Banking Corp connection — financial institutions should review correspondent relationships",
-      "On-chain address designations are directly enforceable — blockchain analytics tools should be updated"
-    ],
-    url: "https://www.federalregister.gov/documents/2026/03/17/2026-05114/notice-of-ofac-sanctions-action"
-  },
-  {
-    id: 11,
-    date: "Feb 27, 2026",
-    ts: 20260227,
-    title: "SDN removal and identifying information update",
-    desc: "OFAC unblocked and removed one individual from the SDN List, and updated identifying information for a separate individual whose assets remain blocked under U.S. jurisdiction.",
-    types: ["removal", "update"],
-    programs: [],
-    implications: [
-      "Parties holding blocked assets of the removed individual should seek unblocking promptly",
-      "Updated identifying information for the second individual — re-screen against updated SDN entry",
-      "Administrative update — monitor for any enforcement implications"
-    ],
-    url: "https://www.federalregister.gov/documents/2026/03/03/2026-04177/notice-of-ofac-sanctions-actions"
-  }
+  { id:1, date:"Mar 24, 2026", ts:20260324, title:"Venezuela-related General License issued for PdVSA transactions", desc:"OFAC issued a new Venezuela-related General License authorizing certain transactions involving PdVSA and entities owned 50%+ by PdVSA, including sale of Venezuelan oil. New FAQs 1245 and 1246 released for guidance.", types:["license"], programs:["venezuela"], implications:["Energy clients with Venezuelan operations should review new authorization scope","FAQs 1245-1246 clarify permissible vs. prohibited PdVSA transactions","Secondary sanctions risk on non-U.S. persons dealing in Venezuelan oil remains","Review counterparty ownership structures for 50% rule compliance"], url:"https://ofac.treasury.gov/recent-actions" },
+  { id:2, date:"Mar 20, 2026", ts:20260320, title:"Iran GL U: temporary authorization for Iranian-origin oil on vessels", desc:"OFAC temporarily authorized sale of oil and petroleum products of Iranian origin loaded on any vessel as of March 20, 2026. Authorization runs through April 19, 2026. Part of a broader strategy to stabilize global energy markets amid the Strait of Hormuz crisis.", types:["license"], programs:["iran"], implications:["Window closes April 19 — clients holding or transporting affected cargo must act quickly","GL does not authorize new purchases of Iranian-origin oil","Maritime clients should document vessel loading dates carefully","~140-161M barrels of Iranian oil currently at sea covered by this waiver"], url:"https://ofac.treasury.gov/recent-actions" },
+  { id:3, date:"Mar 20, 2026", ts:20260320, title:"Hizballah network designated: 10 individuals, 6 entities; Russia & narcotics removals", desc:"OFAC designated 10 individuals and 6 entities (16 total) linked to a Hizballah financing network led by Alaa Hassan Hamieh, spanning Lebanon, Syria, Poland, Slovenia, Qatar, and Canada. Simultaneously removed Mexico-based narcotics traffickers and select Russia-related designees.", types:["designation","removal"], programs:["ct","russia"], designees:16, removees:8, implications:["Financial institutions should screen for Hamieh network across all listed jurisdictions","Russia removals may affect previously blocked accounts or pending licenses","Poland and Slovenia nexus unusual — EU compliance programs should update screening"], url:"https://ofac.treasury.gov/recent-actions/20260320" },
+  { id:4, date:"Mar 19, 2026", ts:20260319, title:"Russia GL 134A: amended crude oil vessel delivery window", desc:"GL 134A authorizes delivery and sale of crude oil and petroleum products of Russian Federation origin loaded on vessels as of March 12, 2026. Supersedes GL 134.", types:["license"], programs:["russia"], implications:["Supersedes GL 134 — clients must confirm GL 134A covers their transactions","Loading date of March 12 is the key cutoff — document vessel manifests","Energy traders holding Russian-origin cargo should confirm delivery deadlines"], url:"https://ofac.treasury.gov/recent-actions" },
+  { id:5, date:"Mar 19, 2026", ts:20260319, title:"Venezuela General License 5V amended", desc:"Amended Venezuela-related GL 5V issued, authorizing certain transactions related to Venezuelan operations. Part of a broader package of Venezuela-related licensing updates alongside GL 52.", types:["license"], programs:["venezuela"], implications:["Read in conjunction with GL 52 for full Venezuela authorization picture","Clients should confirm whether existing specific licenses remain necessary"], url:"https://ofac.treasury.gov/recent-actions" },
+  { id:6, date:"Mar 18, 2026", ts:20260318, title:"Russia-related SDN removals: Turkey and UAE entities", desc:"OFAC removed multiple individuals and entities designated under EO 14024, including a Russian national and entities based in Turkey and the UAE. Removals issued without press release or stated rationale.", types:["removal"], programs:["russia"], implications:["Delisting confirms OFAC's willingness to remove parties following compliance remediation","Useful precedent for pending delisting petitions in Russia program"], url:"https://ofac.treasury.gov/recent-actions/sanctions-list-updates" },
+  { id:7, date:"Mar 18, 2026", ts:20260318, title:"Venezuela General License 52 issued", desc:"GL 52 authorizes certain transactions involving PdVSA and any entity owned 50%+ by PdVSA. Continued prohibition on transactions involving OFAC-blocked vessels remains in effect.", types:["license"], programs:["venezuela"], implications:["Blocked vessel carve-out is critical — clients must screen vessels against current SDN list","PdVSA 50% ownership rule applies — beneficial ownership analysis required"], url:"https://ofac.treasury.gov/recent-actions" },
+  { id:8, date:"Mar 13, 2026", ts:20260313, title:"Cyber-related and Russia-linked designees removed including Finnish companies", desc:"OFAC removed multiple individuals and Finland-based companies from the SDN List, including Nikita Kovalevskij and associated Finnish companies previously designated for FSB-linked logistics activity.", types:["removal"], programs:["cyber","russia"], implications:["Finnish nexus highlights EU/U.S. sanctions convergence issues","Technology sector clients should re-screen previously restricted counterparties"], url:"https://ofac.treasury.gov/recent-actions/sanctions-list-updates" },
+  { id:9, date:"Mar 12, 2026", ts:20260312, title:"DPRK IT worker fraud network: 6 individuals, 2 entities designated", desc:"OFAC sanctioned 6 individuals and 2 entities for involvement in DPRK IT worker scheme targeting U.S. businesses, generating ~$800M in 2024 for WMD programs. 21 cryptocurrency addresses designated across ETH, Tron, and Bitcoin.", types:["designation"], programs:["nk","cyber"], designees:8, implications:["Crypto exchanges must screen 21 designated ETH, Tron, and Bitcoin addresses immediately","U.S. businesses should audit remote IT contractor relationships for DPRK nexus","$800M generated in 2024 alone — enhanced due diligence required"], url:"https://home.treasury.gov/news/press-releases/sb0348" },
+  { id:10, date:"Mar 6, 2026", ts:20260306, title:"Russia GL 134: initial crude oil vessel window issued", desc:"GL 134 authorized certain transactions for sale, delivery, or offloading of Russian-origin crude oil loaded on vessels on or before March 12, 2026. Now superseded by GL 134A.", types:["license"], programs:["russia"], implications:["Now superseded by GL 134A — do not rely on this GL for ongoing compliance","Useful for documenting authorization basis for transactions executed March 6-18"], url:"https://ofac.treasury.gov/recent-actions" },
+  { id:11, date:"Feb 27, 2026", ts:20260227, title:"SDN removal and identifying information update", desc:"OFAC unblocked and removed one individual from the SDN List, and updated identifying information for a separate individual whose assets remain blocked.", types:["removal","update"], programs:[], implications:["Parties holding blocked assets of the removed individual should seek unblocking promptly","Re-screen against updated SDN entry for the modified individual"], url:"https://www.federalregister.gov/documents/2026/03/03/2026-04177/notice-of-ofac-sanctions-actions" }
 ];
 /* ACTIONS_END */
 
-let activeFilter = 'all';
-let selectedId = null;
-let searchQuery = '';
+let activeFilter = 'all', selectedId = null, searchQuery = '';
 
 function countBy(type) {
-  if (['designation','removal','license','update'].includes(type))
-    return ACTIONS.filter(a => a.types.includes(type)).length;
+  if (['designation','removal','license','update'].includes(type)) return ACTIONS.filter(a => a.types.includes(type)).length;
   return ACTIONS.filter(a => a.programs.includes(type)).length;
 }
 
 function updateStats() {
-  document.getElementById('statDesig').textContent = countBy('designation');
-  document.getElementById('statRemoval').textContent = countBy('removal');
+  const totalDesignees = ACTIONS.reduce((sum, a) => sum + (a.designees || 0), 0);
+  const totalRemovees = ACTIONS.reduce((sum, a) => sum + (a.removees || 0), 0);
+  const desigActions = ACTIONS.filter(a => a.types.includes('designation')).length;
+  const removalActions = ACTIONS.filter(a => a.types.includes('removal')).length;
+  document.getElementById('statDesigPeople').textContent = totalDesignees;
+  document.getElementById('statRemovalPeople').textContent = totalRemovees || '—';
+  document.getElementById('statDesigActions').textContent = desigActions + ' action' + (desigActions !== 1 ? 's' : '');
+  document.getElementById('statRemovalActions').textContent = removalActions + ' action' + (removalActions !== 1 ? 's' : '');
   document.getElementById('statLicense').textContent = countBy('license');
   document.getElementById('statTotal').textContent = ACTIONS.length;
   document.getElementById('countAll').textContent = ACTIONS.length;
-  document.getElementById('countDesig').textContent = countBy('designation');
-  document.getElementById('countRemoval').textContent = countBy('removal');
+  document.getElementById('countDesig').textContent = desigActions;
+  document.getElementById('countRemoval').textContent = removalActions;
   document.getElementById('countLicense').textContent = countBy('license');
   document.getElementById('countUpdate').textContent = countBy('update');
 }
@@ -768,19 +332,12 @@ function updateStats() {
 function getFiltered() {
   let items = ACTIONS;
   if (activeFilter !== 'all') {
-    if (['designation','removal','license','update'].includes(activeFilter))
-      items = items.filter(a => a.types.includes(activeFilter));
-    else
-      items = items.filter(a => a.programs.includes(activeFilter));
+    if (['designation','removal','license','update'].includes(activeFilter)) items = items.filter(a => a.types.includes(activeFilter));
+    else items = items.filter(a => a.programs.includes(activeFilter));
   }
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
-    items = items.filter(a =>
-      a.title.toLowerCase().includes(q) ||
-      a.desc.toLowerCase().includes(q) ||
-      a.programs.join(' ').includes(q) ||
-      a.types.join(' ').includes(q)
-    );
+    items = items.filter(a => a.title.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q) || a.programs.join(' ').includes(q) || a.types.join(' ').includes(q));
   }
   return items;
 }
@@ -789,24 +346,14 @@ function renderFeed() {
   const items = getFiltered();
   const feed = document.getElementById('feed');
   document.getElementById('feedCount').textContent = items.length + ' action' + (items.length !== 1 ? 's' : '');
-
-  if (!items.length) {
-    feed.innerHTML = '<div class="empty-state">No actions match your filters.</div>';
-    return;
-  }
-
+  if (!items.length) { feed.innerHTML = '<div class="empty-state">No actions match this filter.</div>'; return; }
   feed.innerHTML = items.map(a => {
-    const typeTags = a.types.map(t => `<span class="tag ${t}">${t}</span>`).join('');
-    const progTags = a.programs.map(p => `<span class="tag ${p}">${p === 'ct' ? 'counterterrorism' : p === 'nk' ? 'N. Korea' : p}</span>`).join('');
-    const sel = selectedId === a.id ? ' selected' : '';
-    return `<div class="action-card${sel}" onclick="selectAction(${a.id})">
-      <div class="card-top">
-        <div class="card-title">${a.title}</div>
-        <div class="card-date">${a.date}</div>
-      </div>
-      <div class="card-desc">${a.desc}</div>
-      <div class="card-tags">${typeTags}${progTags}</div>
-    </div>`;
+    const typeTags = a.types.map(t => '<span class="tag ' + t + '">' + t + '</span>').join('');
+    const progTags = a.programs.map(p => '<span class="tag ' + p + '">' + (p==='ct'?'CT/SDGT':p==='nk'?'N. Korea':p) + '</span>').join('');
+    return '<div class="action-card' + (selectedId===a.id?' selected':'') + '" onclick="selectAction(' + a.id + ')">' +
+      '<div class="card-top"><div class="card-title">' + a.title + '</div><div class="card-date">' + a.date + '</div></div>' +
+      '<div class="card-desc">' + a.desc + '</div>' +
+      '<div class="card-tags">' + typeTags + progTags + '</div></div>';
   }).join('');
 }
 
@@ -814,41 +361,24 @@ function selectAction(id) {
   selectedId = id;
   const a = ACTIONS.find(x => x.id === id);
   if (!a) return;
-
   renderFeed();
-
-  const typeTags = a.types.map(t => `<span class="tag ${t}">${t}</span>`).join('');
-  const progTags = a.programs.map(p => `<span class="tag ${p}">${p === 'ct' ? 'counterterrorism' : p === 'nk' ? 'N. Korea' : p}</span>`).join('');
-  const impList = a.implications.map(i => `<li>${i}</li>`).join('');
-
-  document.getElementById('detailPlaceholder').style.display = 'none';
+  const typeTags = a.types.map(t => '<span class="tag ' + t + '">' + t + '</span>').join('');
+  const progTags = a.programs.map(p => '<span class="tag ' + p + '">' + (p==='ct'?'CT/SDGT':p==='nk'?'N. Korea':p) + '</span>').join('');
+  document.querySelector('.detail-panel').classList.add('visible');
   const dc = document.getElementById('detailContent');
   dc.className = 'detail-content visible';
-  dc.innerHTML = `
-    <div class="detail-date">${a.date}</div>
-    <div class="detail-title">${a.title}</div>
-    <div class="detail-program-bar">${typeTags}${progTags}</div>
-    <div class="detail-body">${a.desc}</div>
-    <div class="detail-section-label">Practice Implications</div>
-    <ul class="detail-implications">${impList}</ul>
-    <a class="detail-link" href="${a.url}" target="_blank">View Source → OFAC / Federal Register</a>
-    <button class="ask-claude-btn" onclick="askClaude(${a.id})">Ask Claude about this action ↗</button>
-  `;
-}
-
-function askClaude(id) {
-  const a = ACTIONS.find(x => x.id === id);
-  if (!a) return;
-  const q = `I'm an OFAC sanctions attorney. Can you give me a detailed analysis of this OFAC action and its practical implications for my clients: "${a.title}" (${a.date}). Details: ${a.desc}`;
-  if (window.opener) window.opener.postMessage({ type: 'sendPrompt', text: q }, '*');
-  else alert('Open this app from within Claude to use the Ask Claude feature.');
+  dc.innerHTML = '<div class="detail-date">' + a.date + '</div>' +
+    '<div class="detail-title">' + a.title + '</div>' +
+    '<div class="detail-program-bar">' + typeTags + progTags + '</div>' +
+    '<div class="detail-body">' + a.desc + '</div>' +
+    '<div class="detail-section-label">Practice Implications</div>' +
+    '<ul class="detail-implications">' + a.implications.map(i => '<li>' + i + '</li>').join('') + '</ul>' +
+    '<a class="detail-link" href="' + a.url + '" target="_blank">View Source</a>';
 }
 
 function updateTicker() {
-  const items = ACTIONS.slice(0, 6);
-  const text = items.map(a => `<span><span class="dot">●</span>${a.date} — ${a.title}</span>`).join('');
-  const inner = document.getElementById('tickerInner');
-  inner.innerHTML = text + text;
+  const text = ACTIONS.slice(0,6).map(a => '<span><span class="dot">&#9670;</span>' + a.date.toUpperCase() + ' — ' + a.title + '</span>').join('');
+  document.getElementById('tickerInner').innerHTML = text + text;
 }
 
 function setFilters() {
@@ -857,7 +387,7 @@ function setFilters() {
       document.querySelectorAll('#typeFilters button, #progFilters button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeFilter = btn.dataset.filter;
-      const labels = { all: 'All Actions', designation: 'Designations', removal: 'Removals', license: 'General Licenses', update: 'Updates', russia: 'Russia', iran: 'Iran', venezuela: 'Venezuela', cuba: 'Cuba', ct: 'Counterterrorism', nk: 'North Korea', cyber: 'Cyber' };
+      const labels = {all:'All Actions',designation:'Designations',removal:'Removals',license:'General Licenses',update:'Updates',russia:'Russia',iran:'Iran',venezuela:'Venezuela',cuba:'Cuba',ct:'CT / SDGT',nk:'North Korea',cyber:'Cyber'};
       document.getElementById('feedHeading').textContent = labels[activeFilter] || activeFilter;
       renderFeed();
     });
@@ -866,32 +396,19 @@ function setFilters() {
 
 function fetchAndRender() {
   const btn = document.getElementById('refreshBtn');
-  btn.classList.add('loading');
-  btn.textContent = '↻ Refreshing…';
+  btn.textContent = 'Refreshing...';
+  btn.style.opacity = '0.6';
   setTimeout(() => {
-    btn.classList.remove('loading');
-    btn.textContent = '↻ Refresh';
-    const now = new Date();
-    document.getElementById('lastUpdatedTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    renderFeed();
-    updateStats();
-    updateTicker();
-  }, 1200);
+    btn.textContent = 'Refresh';
+    btn.style.opacity = '1';
+    document.getElementById('lastUpdatedTime').textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' ET';
+    renderFeed(); updateStats(); updateTicker();
+  }, 800);
 }
 
-// Init
-updateStats();
-updateTicker();
-renderFeed();
-setFilters();
+updateStats(); updateTicker(); renderFeed(); setFilters();
 document.getElementById('lastUpdatedTime').textContent = LAST_UPDATED;
-
-document.getElementById('searchInput').addEventListener('input', e => {
-  searchQuery = e.target.value;
-  renderFeed();
-});
-
-// Auto-refresh every 5 minutes
+document.getElementById('searchInput').addEventListener('input', e => { searchQuery = e.target.value; renderFeed(); });
 setInterval(fetchAndRender, 5 * 60 * 1000);
 </script>
 </body>
