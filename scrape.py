@@ -1,43 +1,15 @@
 #!/usr/bin/env python3
 """
-OFAC Action Tracker — Daily scraper
-Fetches recent actions from OFAC and the Federal Register,
-then injects the data into index.html as a JS array.
+OFAC Action Tracker - scraper
+Fetches latest actions from OFAC and rewrites index.html.
 """
 
-import json
-import re
-import sys
-import time
+import json, re, time, sys
 from datetime import datetime, timezone
 from urllib.request import urlopen, Request
 from urllib.error import URLError
-from html.parser import HTMLParser
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; OFAC-Tracker-Bot/1.0)"
-}
-
-PROGRAM_KEYWORDS = {
-    "russia":      ["russia", "ukraine", "eo 14024", "eo14024", "gl 13", "gl 134", "russian"],
-    "iran":        ["iran", "iranian", "ifsr", "irgc", "itsr"],
-    "venezuela":   ["venezuela", "venezuelan", "pdvsa", "gl 52", "gl 5v"],
-    "cuba":        ["cuba", "cuban", "cacr"],
-    "ct":          ["hizballah", "hezbollah", "hamas", "sdgt", "terrorist", "terrorism",
-                    "counterterrorism", "al-qaeda", "isis", "isil"],
-    "nk":          ["north korea", "dprk", "npwmd", "kwangson", "korean"],
-    "cyber":       ["cyber", "ransomware", "darkside", "evil corp", "wizard spider"],
-}
-
-TYPE_KEYWORDS = {
-    "designation": ["designated", "designation", "added to the sdn", "sanctioned",
-                    "blocked persons list"],
-    "removal":     ["removed", "removal", "delisted", "unblocked", "delisting"],
-    "license":     ["general license", "gl ", "authorized", "authorization",
-                    "specific license"],
-    "update":      ["updated", "update", "amended", "amendment", "modified"],
-}
-
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; OFAC-Tracker/2.0)"}
 
 def fetch(url):
     try:
@@ -45,9 +17,25 @@ def fetch(url):
         with urlopen(req, timeout=15) as r:
             return r.read().decode("utf-8", errors="replace")
     except URLError as e:
-        print(f"  WARN: could not fetch {url}: {e}", file=sys.stderr)
+        print(f"  WARN: {url}: {e}", file=sys.stderr)
         return ""
 
+PROGRAM_KEYWORDS = {
+    "russia":    ["russia","ukraine","eo 14024","eo14024","russian","gl 134","gl134","magnitsky","belarus","glomag"],
+    "iran":      ["iran","iranian","ifsr","irgc","itsr","hormuz","gl u"],
+    "venezuela": ["venezuela","venezuelan","pdvsa","gl 52","gl 5v","gl 51","gl 54","gl 55","minerals"],
+    "cuba":      ["cuba","cuban","cacr"],
+    "ct":        ["hizballah","hezbollah","hamas","sdgt","terrorist","terrorism","al-qaeda","isis","isil"],
+    "nk":        ["north korea","dprk","npwmd","kwangson","korean"],
+    "cyber":     ["cyber","ransomware","darkside","evil corp"],
+}
+
+TYPE_KEYWORDS = {
+    "designation": ["designated","designation","added to the sdn","sanctioned","blocked persons list"],
+    "removal":     ["removed","removal","delisted","unblocked","delisting","deletions"],
+    "license":     ["general license","gl ","authorized","authorization","issuance"],
+    "update":      ["updated","update","amended","amendment","modified"],
+}
 
 def classify(text):
     low = text.lower()
@@ -57,122 +45,58 @@ def classify(text):
         types = ["update"]
     return types, programs
 
-
-def fmt_date(dt):
-    return dt.strftime("%b %-d, %Y")
-
-
-def ts_int(dt):
-    return int(dt.strftime("%Y%m%d"))
-
-
-# ── Source 1: OFAC Recent Actions page ──────────────────────────────────────
-
-class OFACParser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.items = []
-        self._in_item = False
-        self._in_title = False
-        self._in_date = False
-        self._in_desc = False
-        self._cur = {}
-        self._buf = ""
-        self._depth = 0
-
-    def handle_starttag(self, tag, attrs):
-        adict = dict(attrs)
-        cls = adict.get("class", "")
-        if "views-row" in cls or "views-field-title" in cls:
-            self._in_item = True
-            self._cur = {"url": "https://ofac.treasury.gov/recent-actions"}
-        if self._in_item:
-            if tag == "h3" or ("field-content" in cls and self._buf == ""):
-                self._in_title = True
-            if "date" in cls or tag == "time":
-                self._in_date = True
-            if tag == "a" and "href" in adict:
-                href = adict["href"]
-                if href.startswith("/"):
-                    href = "https://ofac.treasury.gov" + href
-                self._cur["url"] = href
-            if "field-content" in cls:
-                self._in_desc = True
-
-    def handle_data(self, data):
-        data = data.strip()
-        if not data:
-            return
-        if self._in_title and not self._cur.get("title"):
-            self._cur["title"] = data
-            self._in_title = False
-        elif self._in_date and not self._cur.get("date"):
-            self._cur["date"] = data
-            self._in_date = False
-        elif self._in_desc and not self._cur.get("desc"):
-            self._cur["desc"] = data
-
-    def handle_endtag(self, tag):
-        if tag in ("article", "li") and self._cur.get("title"):
-            self.items.append(self._cur)
-            self._cur = {}
-            self._in_item = False
-
-
 def scrape_ofac():
-    print("Fetching OFAC recent actions page…")
+    print("Fetching OFAC recent actions...")
     html = fetch("https://ofac.treasury.gov/recent-actions")
     if not html:
         return []
 
-    # Extract action blocks via regex (OFAC page structure varies)
     actions = []
-    # Look for date + title patterns in the HTML
-    # Pattern: date heading followed by action descriptions
-    date_pattern = re.compile(
-        r'(\d{1,2}/\d{1,2}/\d{4}|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{1,2},?\s+\d{4})',
-        re.IGNORECASE
+    # Find action links and titles
+    pattern = re.compile(
+        r'<a href="(/recent-actions/(\d{8}[^"]*))">([^<]+)</a>\s*\n\s*\n([^\n]+)\n\s*([^\n<]+)',
+        re.MULTILINE
     )
-    title_pattern = re.compile(r'<(?:h[1-6]|strong|b)[^>]*>(.*?)</(?:h[1-6]|strong|b)>', re.DOTALL)
-    link_pattern = re.compile(r'href="(/[^"]+)"[^>]*>([^<]{10,})</a>')
+    date_pattern = re.compile(r'(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})')
 
-    titles_found = title_pattern.findall(html)
-    links_found = link_pattern.findall(html)
+    # Simpler extraction: find all result rows
+    rows = re.findall(
+        r'<a href="(/recent-actions/(\d{8}[^"]*))">([^<]{10,})</a>.*?(\w+ \d{1,2}, \d{4})',
+        html, re.DOTALL
+    )
 
     seen = set()
-    for href, text in links_found:
-        text = re.sub(r'<[^>]+>', '', text).strip()
-        if len(text) < 15 or text in seen:
+    for href, slug, title, date_str in rows:
+        title = title.strip()
+        if title in seen or len(title) < 10:
             continue
-        if any(skip in href.lower() for skip in ['login', 'search', 'about', 'contact']):
-            continue
-        seen.add(text)
-        url = "https://ofac.treasury.gov" + href
-        types, programs = classify(text)
+        seen.add(title)
+
+        try:
+            dt = datetime.strptime(date_str.strip(), "%B %d, %Y").replace(tzinfo=timezone.utc)
+        except ValueError:
+            dt = datetime.now(timezone.utc)
+
+        types, programs = classify(title)
         actions.append({
-            "title": text,
-            "desc": text,
-            "url": url,
+            "title": title,
+            "desc": title,
+            "date_raw": dt,
             "types": types,
             "programs": programs,
-            "date_raw": datetime.now(timezone.utc)
+            "url": "https://ofac.treasury.gov" + href,
         })
-        if len(actions) >= 20:
-            break
 
+    print(f"  Found {len(actions)} actions from OFAC")
     return actions
 
-
-# ── Source 2: Federal Register OFAC notices ─────────────────────────────────
-
 def scrape_federal_register():
-    print("Fetching Federal Register OFAC notices…")
+    print("Fetching Federal Register...")
     url = (
         "https://www.federalregister.gov/api/v1/documents.json"
         "?conditions[agencies][]=office-of-foreign-assets-control"
         "&conditions[type][]=Notice"
-        "&order=newest"
-        "&per_page=20"
+        "&order=newest&per_page=15"
         "&fields[]=title&fields[]=publication_date&fields[]=html_url&fields[]=abstract"
     )
     raw = fetch(url)
@@ -205,165 +129,152 @@ def scrape_federal_register():
         actions.append({
             "title": title,
             "desc": abstract if len(abstract) > 20 else title,
+            "date_raw": dt,
+            "types": types,
+            "programs": programs,
             "url": html_url,
-            "types": types,
-            "programs": programs,
-            "date_raw": dt,
         })
 
+    print(f"  Found {len(actions)} actions from Federal Register")
     return actions
-
-
-# ── Source 3: ABA Banking Journal OFAC roundup ──────────────────────────────
-
-def scrape_aba():
-    print("Fetching ABA Banking Journal OFAC roundup…")
-    html = fetch("https://bankingjournal.aba.com/?s=ofac")
-    if not html:
-        return []
-
-    actions = []
-    pattern = re.compile(
-        r'<h[23][^>]*>\s*<a\s+href="([^"]+)"[^>]*>(.*?)</a>\s*</h[23]>',
-        re.DOTALL | re.IGNORECASE
-    )
-    date_pat = re.compile(r'(\d{4}/\d{2}/\d{2})')
-
-    for m in pattern.finditer(html):
-        url, title = m.group(1), re.sub(r'<[^>]+>', '', m.group(2)).strip()
-        if "ofac" not in url.lower() and "ofac" not in title.lower():
-            continue
-        dm = date_pat.search(url)
-        if dm:
-            try:
-                dt = datetime.strptime(dm.group(1), "%Y/%m/%d").replace(tzinfo=timezone.utc)
-            except ValueError:
-                dt = datetime.now(timezone.utc)
-        else:
-            dt = datetime.now(timezone.utc)
-
-        types, programs = classify(title)
-        actions.append({
-            "title": title,
-            "desc": title,
-            "url": url,
-            "types": types,
-            "programs": programs,
-            "date_raw": dt,
-        })
-        if len(actions) >= 10:
-            break
-
-    return actions
-
-
-# ── Merge, deduplicate, sort ─────────────────────────────────────────────────
-
-def normalise(s):
-    return re.sub(r'\W+', ' ', s.lower()).strip()
-
 
 def merge(sources):
-    seen_titles = set()
+    seen = set()
     merged = []
     for item in sources:
-        key = normalise(item["title"])[:60]
-        if key in seen_titles:
+        key = re.sub(r'\W+', ' ', item["title"].lower()).strip()[:60]
+        if key in seen:
             continue
-        seen_titles.add(key)
+        seen.add(key)
         merged.append(item)
     merged.sort(key=lambda x: x["date_raw"], reverse=True)
-    return merged[:40]
+    return merged[:30]
 
+def fmt_date(dt):
+    return dt.strftime("%b %-d, %Y")
 
-# ── Build JS-safe action objects ─────────────────────────────────────────────
+def ts_int(dt):
+    return int(dt.strftime("%Y%m%d"))
 
-def build_actions(raw):
-    actions = []
+def build_js_actions(raw):
+    out = []
     for i, item in enumerate(raw, 1):
         dt = item["date_raw"]
-        actions.append({
-            "id": i,
-            "date": fmt_date(dt),
-            "ts": ts_int(dt),
-            "title": item["title"],
-            "desc": item["desc"] or item["title"],
-            "types": item["types"],
-            "programs": item["programs"],
-            "implications": [],   # kept empty; future: LLM enrichment
-            "url": item["url"],
-        })
-    return actions
+        title = item["title"].replace('"', '&quot;').replace("'", "&#39;")
+        desc = item["desc"].replace('"', '&quot;').replace("'", "&#39;")
+        types_js = json.dumps(item["types"])
+        programs_js = json.dumps(item["programs"])
+        url = item["url"]
+        implications = suggest_implications(item)
+        impl_js = json.dumps(implications)
 
+        out.append(
+            f'  {{ id:{i}, date:"{fmt_date(dt)}", ts:{ts_int(dt)}, '
+            f'title:"{title}", desc:"{desc}", '
+            f'types:{types_js}, programs:{programs_js}, '
+            f'implications:{impl_js}, url:"{url}" }}'
+        )
+    return "const ACTIONS = [\n" + ",\n".join(out) + "\n];"
 
-# ── Inject into index.html ────────────────────────────────────────────────────
+def suggest_implications(item):
+    implications = []
+    low = item["title"].lower() + " " + item["desc"].lower()
 
-MARKER_START = "/* ACTIONS_START */"
-MARKER_END   = "/* ACTIONS_END */"
-UPDATED_MARKER = "/* LAST_UPDATED */"
+    if "general license" in low or "gl " in low:
+        implications.append("Review authorization scope carefully before transacting")
+        implications.append("Check expiration dates and conditions in the full GL text")
+        implications.append("Coordinate with counsel on interaction with other applicable GLs")
+    if "designat" in low:
+        implications.append("Screen immediately against updated SDN list")
+        implications.append("Block any assets or transactions involving designated parties")
+        implications.append("Review counterparty relationships for exposure to designated network")
+    if "remov" in low or "delist" in low:
+        implications.append("Previously blocked transactions may now be permissible — review pending matters")
+        implications.append("Unblocking of assets may require OFAC reporting")
+        implications.append("Monitor for related entities that may remain on SDN list")
+    if "venezuela" in low or "pdvsa" in low:
+        implications.append("Apply 50% rule analysis to all PdVSA-linked counterparties")
+        implications.append("Review blocked vessel lists before transacting")
+    if "russia" in low:
+        implications.append("Secondary sanctions risk applies to non-U.S. persons — advise foreign clients")
+        implications.append("EO 14024 is the primary authority — confirm applicability to transaction")
+    if "iran" in low:
+        implications.append("Primary and secondary sanctions both apply — distinguish U.S. and non-U.S. persons")
+        implications.append("Check expiration dates carefully on any Iran-related GLs")
+    if "belarus" in low:
+        implications.append("Directive 1 rescission significantly changes Belarus compliance landscape")
+        implications.append("Review and update Belarus compliance policies immediately")
+    if not implications:
+        implications = [
+            "Review full action text on OFAC.treasury.gov",
+            "Assess impact on existing client transactions and counterparty relationships",
+            "Update internal compliance screening as needed"
+        ]
+    return implications[:4]
 
+def get_coverage_dates(actions):
+    if not actions:
+        return "Recent", "Recent"
+    dates = sorted([a["date_raw"] for a in actions])
+    start = dates[0].strftime("%b %-d, %Y")
+    end = dates[-1].strftime("%b %-d, %Y")
+    return start, end
 
-def inject(html_path, actions):
-    with open(html_path, "r", encoding="utf-8") as f:
+def rewrite_html(actions):
+    with open("index.html", "r", encoding="utf-8") as f:
         content = f.read()
 
-    js_array = "const ACTIONS = " + json.dumps(actions, ensure_ascii=False, indent=2) + ";"
-    block = f"{MARKER_START}\n{js_array}\n{MARKER_END}"
+    js_actions = build_js_actions(actions)
+    updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    start_date, end_date = get_coverage_dates(actions)
 
-    updated_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    updated_line = f'{UPDATED_MARKER}\nconst LAST_UPDATED = "{updated_str}";'
+    # Replace ACTIONS block
+    content = re.sub(
+        r'/\* ACTIONS_START \*/.*?/\* ACTIONS_END \*/',
+        f'/* ACTIONS_START */\n{js_actions}\n/* ACTIONS_END */',
+        content, flags=re.DOTALL
+    )
 
-    if MARKER_START in content and MARKER_END in content:
-        content = re.sub(
-            re.escape(MARKER_START) + r".*?" + re.escape(MARKER_END),
-            block,
-            content,
-            flags=re.DOTALL
-        )
-    else:
-        # First run: inject before closing </script>
-        content = content.replace("const ACTIONS = [", block.split("\n")[1], 1)
+    # Update LAST_UPDATED
+    content = re.sub(
+        r'const LAST_UPDATED = "[^"]*";',
+        f'const LAST_UPDATED = "{updated}";',
+        content
+    )
 
-    if UPDATED_MARKER in content:
-        content = re.sub(
-            re.escape(UPDATED_MARKER) + r".*?\n",
-            updated_line + "\n",
-            content,
-            flags=re.DOTALL
-        )
+    # Update coverage period in header
+    content = re.sub(
+        r'<div class="header-meta-val">.*?–.*?</div>',
+        f'<div class="header-meta-val">{start_date} – {end_date}</div>',
+        content
+    )
 
-    with open(html_path, "w", encoding="utf-8") as f:
+    with open("index.html", "w", encoding="utf-8") as f:
         f.write(content)
 
-    print(f"  Wrote {len(actions)} actions to {html_path}")
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
+    print(f"  Rewrote index.html with {len(actions)} actions")
+    print(f"  Coverage: {start_date} – {end_date}")
+    print(f"  Last updated: {updated}")
 
 def main():
     all_raw = []
 
     fr = scrape_federal_register()
-    print(f"  → {len(fr)} items from Federal Register")
     all_raw.extend(fr)
     time.sleep(1)
 
-    aba = scrape_aba()
-    print(f"  → {len(aba)} items from ABA Banking Journal")
-    all_raw.extend(aba)
-    time.sleep(1)
-
     ofac = scrape_ofac()
-    print(f"  → {len(ofac)} items from OFAC")
     all_raw.extend(ofac)
 
     merged = merge(all_raw)
-    print(f"  → {len(merged)} unique actions after dedup")
+    print(f"  Total unique actions: {len(merged)}")
 
-    actions = build_actions(merged)
-    inject("index.html", actions)
+    if not merged:
+        print("No actions found — keeping existing index.html")
+        return
+
+    rewrite_html(merged)
     print("Done.")
-
 
 if __name__ == "__main__":
     main()
