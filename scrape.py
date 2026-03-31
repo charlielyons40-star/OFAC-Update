@@ -108,8 +108,8 @@ def scrape_ofac():
         types, programs = classify(title)
         actions.append({
             "title": title,
-"desc": fetch_action_summary("https://ofac.treasury.gov" + href) or title,            "date_raw": dt,
-            "types": types,
+"desc": fetch_action_summary("https://ofac.treasury.gov" + href) or title,
+            "date_raw": dt,            "types": types,
             "programs": programs,
             "url": "https://ofac.treasury.gov" + href,
         })
