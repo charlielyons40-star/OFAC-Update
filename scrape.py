@@ -44,7 +44,17 @@ def classify(text):
     if not types:
         types = ["update"]
     return types, programs
-
+def fetch_action_summary(url):
+    """Fetch the first meaningful paragraph from an OFAC action page."""
+    html = fetch(url)
+    if not html:
+        return ""
+    body = re.search(r'Recent Actions Body(.*?)</div>', html, re.DOTALL)
+    if not body:
+        return ""
+    text = re.sub(r'<[^>]+>', ' ', body.group(1))
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text[:400] if len(text) > 400 else text
 def scrape_ofac():
     print("Fetching OFAC recent actions...")
     html = fetch("https://ofac.treasury.gov/recent-actions")
@@ -98,8 +108,7 @@ def scrape_ofac():
         types, programs = classify(title)
         actions.append({
             "title": title,
-            "desc": title,
-            "date_raw": dt,
+"desc": fetch_action_summary("https://ofac.treasury.gov" + href) or title,            "date_raw": dt,
             "types": types,
             "programs": programs,
             "url": "https://ofac.treasury.gov" + href,
